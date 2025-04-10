@@ -15,7 +15,7 @@ import com.bellaryinfotech.service.UserService;
 
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "mechbill.bellaryinfotech.com/")
 public class UserController {
     @Autowired
     private UserService userService;

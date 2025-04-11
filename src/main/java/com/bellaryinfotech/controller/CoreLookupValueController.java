@@ -25,5 +25,7 @@ public class CoreLookupValueController {
         Pageable pageable = PageRequest.of(page, size);
         return repository.findByLookupTypeContainingIgnoreCase(search, pageable);
     }
+    
+    
 }
 

@@ -15,7 +15,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/orders")
-@CrossOrigin(origins = "*") // Enable CORS for all origins
+@CrossOrigin(origins = "*")  
 public class OrderHeaderController {
 
     @Autowired
@@ -40,25 +40,25 @@ public class OrderHeaderController {
         return new ResponseEntity<>(savedOrder, HttpStatus.CREATED);
     }
     
-    @PutMapping("/{id}")
-    public ResponseEntity<OrderHeader> updateOrder(@PathVariable Long id, @RequestBody OrderHeader orderHeader) {
-        if (!orderHeaderService.getOrderById(id).isPresent()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-        
-        orderHeader.setOrderId(id);
-        OrderHeader updatedOrder = orderHeaderService.saveOrder(orderHeader);
-        return new ResponseEntity<>(updatedOrder, HttpStatus.OK);
-    }
+//    @PutMapping("/{id}")
+//    public ResponseEntity<OrderHeader> updateOrder(@PathVariable Long id, @RequestBody OrderHeader orderHeader) {
+//        if (!orderHeaderService.getOrderById(id).isPresent()) {
+//            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+//        }
+//        
+//         
+//        OrderHeader updatedOrder = orderHeaderService.saveOrder(orderHeader);
+//        return new ResponseEntity<>(updatedOrder, HttpStatus.OK);
+//    }
     
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteOrder(@PathVariable Long id) {
-        if (!orderHeaderService.getOrderById(id).isPresent()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-        
-        orderHeaderService.deleteOrder(id);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-    }
+//    @DeleteMapping("/{id}")
+//    public ResponseEntity<Void> deleteOrder(@PathVariable Long id) {
+//        if (!orderHeaderService.getOrderById(id).isPresent()) {
+//            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+//        }
+//        
+//        orderHeaderService.deleteOrder(id);
+//        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+//    }
 }
 

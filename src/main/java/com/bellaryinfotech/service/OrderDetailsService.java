@@ -1,18 +1,14 @@
 package com.bellaryinfotech.service;
 
- 
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import com.bellaryinfotech.model.OrderDetailsLookup;
-
 import java.util.List;
 import java.util.Map;
 
+import com.bellaryinfotech.model.OrderDetailsHeader;
+import com.bellaryinfotech.model.OrderDetailsLookup;
+
 public interface OrderDetailsService {
     
-    List<OrderDetailsLookup> getBillingFrequencies();
+    Map<String, List<OrderDetailsLookup>> getAllLookupValues();
     
-    Map<String, Object> saveBillingFrequency(String billingFrequency);
+    Map<String, Object> saveOrder(OrderDetailsHeader orderData);
 }

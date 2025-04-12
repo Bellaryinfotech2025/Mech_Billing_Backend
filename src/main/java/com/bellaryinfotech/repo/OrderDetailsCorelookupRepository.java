@@ -7,8 +7,6 @@ import org.springframework.stereotype.Repository;
 
 import com.bellaryinfotech.model.OrderDetailsLookup;
 
- 
-
 @Repository
 public interface OrderDetailsCorelookupRepository extends JpaRepository<OrderDetailsLookup, String> {
     

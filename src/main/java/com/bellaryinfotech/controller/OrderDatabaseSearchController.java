@@ -10,6 +10,8 @@ import com.bellaryinfotech.model.OrderDetailsHeader;
 import com.bellaryinfotech.repo.OrderDetailsHeaderRepository;
 
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 @RestController
 @RequestMapping("/api")
@@ -27,10 +29,39 @@ public class OrderDatabaseSearchController {
     
     @GetMapping("/ordersearchapi")
     public ResponseEntity<List<OrderDetailsHeader>> searchOrders(@RequestParam String query) {
-        // Implement search logic here
-        // This is just a placeholder - you would need to implement the actual search
+         
         List<OrderDetailsHeader> orders = orderHeaderRepository.findAll();
         return ResponseEntity.ok(orders);
     }
+    
+    @PutMapping("/update-order")
+    public ResponseEntity<Map<String, Object>> updateOrder(@RequestBody OrderDetailsHeader order) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            // Check karta ordr hai ki nai
+            OrderDetailsHeader existingOrder = orderHeaderRepository.findById(order.getOrderId())
+                .orElse(null);
+                
+            if (existingOrder == null) {
+                response.put("status", "error");
+                response.put("message", "Order not found");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            // Update the order
+            OrderDetailsHeader updatedOrder = orderHeaderRepository.save(order);
+            
+            response.put("status", "success");
+            response.put("message", "Order updated successfully");
+            response.put("data", updatedOrder);
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to update order: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+    
 }
-

@@ -1,6 +1,7 @@
 package com.bellaryinfotech.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 @Service
+@Primary
 public class OrderDetailsServiceImpl implements OrderDetailsService {
     
     @Autowired

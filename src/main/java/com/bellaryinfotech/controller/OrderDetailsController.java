@@ -18,6 +18,7 @@ import java.util.Map;
 public class OrderDetailsController {
     
     @Autowired
+    
     private OrderDetailsService orderDetailsService;
     
     @GetMapping("/order-lookup-values")   

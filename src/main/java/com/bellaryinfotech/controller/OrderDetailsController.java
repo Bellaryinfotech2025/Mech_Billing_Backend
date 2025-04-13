@@ -20,7 +20,7 @@ public class OrderDetailsController {
     @Autowired
     private OrderDetailsService orderDetailsService;
     
-    @GetMapping("/order-lookup-values")  // Changed from "/lookup-values"
+    @GetMapping("/order-lookup-values")   
     public ResponseEntity<Map<String, List<OrderDetailsLookup>>> getAllLookupValues() {
         // Get all lookup values from the service
         Map<String, List<OrderDetailsLookup>> lookupValues = orderDetailsService.getAllLookupValues();

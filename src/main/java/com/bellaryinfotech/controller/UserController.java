@@ -15,8 +15,11 @@ import com.bellaryinfotech.service.UserService;
 
 @RestController
 @RequestMapping("/api")
+
 @CrossOrigin(origins = "http://mechbill.bellaryinfotech.com", allowedHeaders = "*", methods = {org.springframework.web.bind.annotation.RequestMethod.GET, org.springframework.web.bind.annotation.RequestMethod.POST})
     public class UserController {
+
+ 
     @Autowired
     private UserService userService;
 

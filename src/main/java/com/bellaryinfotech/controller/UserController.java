@@ -16,7 +16,7 @@ import com.bellaryinfotech.service.UserService;
 @RestController
 @RequestMapping("/api")
 
-@CrossOrigin(origins = "http://mechbill.bellaryinfotech.com", allowedHeaders = "*", methods = {org.springframework.web.bind.annotation.RequestMethod.GET, org.springframework.web.bind.annotation.RequestMethod.POST})
+@CrossOrigin(origins = "http://195.35.45.56:5174", allowedHeaders = "*", methods = {org.springframework.web.bind.annotation.RequestMethod.GET, org.springframework.web.bind.annotation.RequestMethod.POST})
     public class UserController {
 
  

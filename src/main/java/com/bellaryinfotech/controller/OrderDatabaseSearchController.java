@@ -21,7 +21,7 @@ public class OrderDatabaseSearchController {
     @Autowired
     private OrderDetailsHeaderRepository orderHeaderRepository;
     
-    @GetMapping("/orderscontroller")
+    @GetMapping("/fetchorderdata")
     public ResponseEntity<List<OrderDetailsHeader>> getAllOrders() {
         List<OrderDetailsHeader> orders = orderHeaderRepository.findAll();
         return ResponseEntity.ok(orders);

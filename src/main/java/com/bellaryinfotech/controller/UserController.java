@@ -15,7 +15,7 @@ import com.bellaryinfotech.service.UserService;
 
 @RestController
 @RequestMapping("/api")
-
+//change with frontend ip address or domain where frontend is running
 @CrossOrigin(origins = "http://mechbill.bellaryinfotech.com", allowedHeaders = "*", methods = {org.springframework.web.bind.annotation.RequestMethod.GET, org.springframework.web.bind.annotation.RequestMethod.POST})
     public class UserController {
 

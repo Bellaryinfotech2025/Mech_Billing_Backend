@@ -1,10 +1,10 @@
 package com.bellaryinfotech.controller;
 
  
-import com.bellaryinfotech.daoimpl.CustomerAccountDTO;
-import com.bellaryinfotech.daoimpl.CustomerContactDTO;
-import com.bellaryinfotech.daoimpl.CustomerSiteDTO;
-import com.bellaryinfotech.daoimpl.OrderRequestDTO;
+import com.bellaryinfotech.DTOImpl.CustomerAccountDTO;
+import com.bellaryinfotech.DTOImpl.CustomerContactDTO;
+import com.bellaryinfotech.DTOImpl.CustomerSiteDTO;
+import com.bellaryinfotech.DTOImpl.OrderRequestDTO;
 import com.bellaryinfotech.service.CustomerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -52,9 +52,9 @@ public class CustomerController {
     public ResponseEntity<String> storeCustomerOrder(@RequestBody OrderRequestDTO request) {
         boolean success = customerService.storeCustomerDetailsByAccountName(request.getAccountName());
         if (success) {
-            return ResponseEntity.ok("Order stored successfully.");
+            return ResponseEntity.ok("Hey! Your Order stored successfully.");
         } else {
-            return ResponseEntity.badRequest().body("Failed to store order. Please check account name and related data.");
+            return ResponseEntity.badRequest().body("Hey! Failed to store order.");
         }
     }
 }

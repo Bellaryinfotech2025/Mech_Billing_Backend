@@ -10,4 +10,5 @@ import java.util.List;
 public interface CustomerContactRepository extends JpaRepository<CustomerContact, Long> {
     List<CustomerContact> findByCustAccountId(Long custAccountId);
     List<CustomerContact> findByCustAcctSiteId(Long custAcctSiteId);
+	CustomerContact findFirstByCustAccountId(Long custAccountId);
 }

@@ -9,4 +9,6 @@ import java.util.List;
 @Repository
 public interface CustomerSiteRepository extends JpaRepository<CustomerAccountSite, Long> {
     List<CustomerAccountSite> findByCustAccountId(Long custAccountId);
+
+	CustomerAccountSite findFirstByCustAccountId(Long custAccountId);
 }

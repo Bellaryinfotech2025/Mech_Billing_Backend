@@ -9,4 +9,6 @@ import java.util.List;
 @Repository
 public interface CustomerAccountRepository extends JpaRepository<CustomerAccount, Long> {
     List<CustomerAccount> findByAccountNameIsNotNull();
+
+	CustomerAccount findByAccountName(String accountName);
 }

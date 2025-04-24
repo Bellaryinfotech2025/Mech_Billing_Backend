@@ -1,60 +1,83 @@
 package com.bellaryinfotech.controller;
 
- 
-import com.bellaryinfotech.DTOImpl.CustomerAccountDTO;
-import com.bellaryinfotech.DTOImpl.CustomerContactDTO;
-import com.bellaryinfotech.DTOImpl.CustomerSiteDTO;
 import com.bellaryinfotech.DTOImpl.OrderRequestDTO;
 import com.bellaryinfotech.service.CustomerService;
+import com.bellaryinfotech.service.CustomerServiceImpl;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
-@RequestMapping("/api/customers")
+@RequestMapping("/api/V2.0")
 @CrossOrigin(origins = "*")
 public class CustomerController {
     
     @Autowired
     private CustomerService customerService;
     
-    @GetMapping("/accounts")
-    public ResponseEntity<List<CustomerAccountDTO>> getAllCustomerAccounts() {
-        List<CustomerAccountDTO> accounts = customerService.getAllCustomerAccounts();
-        return ResponseEntity.ok(accounts);
+    @Autowired
+    CustomerServiceImpl customerServiceImpl;
+    
+    public final String GET_CUSTOMER = "/getallcustomeraccount/details";
+    public final String GET_ALL_SITES_DETAILS = "/getallaccountsitesall/details";
+    public final String GET_ALL_CONTACTS_DETAILS = "/getallcustomercontacts/details";
+    public final String FETCH_CUSTOMER_NAME = "/fetchcustomernames/details";
+    
+    private static final Logger LOG = LoggerFactory.getLogger(CustomerServiceImpl.class);
+    
+    @RequestMapping(value = GET_CUSTOMER, produces = MediaType.APPLICATION_JSON_VALUE, method = RequestMethod.GET)
+    public ResponseEntity<?> getInvoiceRulesDetails(
+            @RequestParam(value = "size", required = false) Integer size,
+            @RequestParam(value = "page", required = false) Integer page,
+            @RequestParam(value = "direction", required = false) String direction,
+            @RequestParam(value = "sort", required = false) String[] sort,
+            @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "customerId", required = false) Long custAccountId,
+            @RequestParam(value = "customerName", required = false) String customerName,
+            @RequestParam(value = "accountNumber", required = false) String accountNumber) {
+        
+        LOG.info("get customer");
+        return customerServiceImpl.getcustomerDtl(page, size, search, custAccountId, accountNumber, customerName);
     }
     
-    @GetMapping("/accounts/{custAccountId}/sites")
-    public ResponseEntity<List<CustomerSiteDTO>> getCustomerSitesByAccountId(
-            @PathVariable Long custAccountId) {
-        List<CustomerSiteDTO> sites = customerService.getCustomerSitesByAccountId(custAccountId);
-        return ResponseEntity.ok(sites);
+    @RequestMapping(value = GET_ALL_SITES_DETAILS, produces = MediaType.APPLICATION_JSON_VALUE, method = RequestMethod.GET)
+    public ResponseEntity<?> getAllSitesDetails(
+            @RequestParam(value = "size", required = false) Integer size,
+            @RequestParam(value = "page", required = false) Integer page,
+            @RequestParam(value = "direction", required = false) String direction,
+            @RequestParam(value = "sort", required = false) String[] sort,
+            @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "customerId", required = false) Long custAccountId,
+            @RequestParam(value = "siteId", required = false) Long custAcctSiteId,
+            @RequestParam(value = "siteName", required = false) String siteName) {
+        
+        LOG.info("get all sites details");
+        return customerServiceImpl.getAllSitesDetails(page, size, search, custAccountId, custAcctSiteId, siteName);
     }
     
-    @GetMapping("/accounts/{custAccountId}/contacts")
-    public ResponseEntity<List<CustomerContactDTO>> getContactsByAccountId(
-            @PathVariable Long custAccountId) {
-        List<CustomerContactDTO> contacts = customerService.getContactsByAccountId(custAccountId);
-        return ResponseEntity.ok(contacts);
+    @RequestMapping(value = GET_ALL_CONTACTS_DETAILS, produces = MediaType.APPLICATION_JSON_VALUE, method = RequestMethod.GET)
+    public ResponseEntity<?> getAllContactsDetails(
+            @RequestParam(value = "size", required = false) Integer size,
+            @RequestParam(value = "page", required = false) Integer page,
+            @RequestParam(value = "direction", required = false) String direction,
+            @RequestParam(value = "sort", required = false) String[] sort,
+            @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "customerId", required = false) Long custAccountId,
+            @RequestParam(value = "siteId", required = false) Long custAcctSiteId,
+            @RequestParam(value = "contactId", required = false) Long contactId,
+            @RequestParam(value = "roleType", required = false) String roleType) {
+        
+        LOG.info("get all contacts details");
+        return customerServiceImpl.getAllContactsDetails(page, size, search, custAccountId, custAcctSiteId, contactId, roleType);
     }
     
-    @GetMapping("/sites/{custAcctSiteId}/contacts")
-    public ResponseEntity<List<CustomerContactDTO>> getContactsBySiteId(
-            @PathVariable Long custAcctSiteId) {
-        List<CustomerContactDTO> contacts = customerService.getContactsBySiteId(custAcctSiteId);
-        return ResponseEntity.ok(contacts);
-    }
-    
-    
-    @PostMapping("/customeridstore")
-    public ResponseEntity<String> storeCustomerOrder(@RequestBody OrderRequestDTO request) {
-        boolean success = customerService.storeCustomerDetailsByAccountName(request.getAccountName());
-        if (success) {
-            return ResponseEntity.ok("Hey! Your Order stored successfully.");
-        } else {
-            return ResponseEntity.badRequest().body("Hey! Failed to store order.");
-        }
+    @PostMapping(value = FETCH_CUSTOMER_NAME, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> fetchCustomerIdAndSave(@RequestBody OrderRequestDTO orderRequestDTO) {
+        LOG.info("Fetching customer Name and saving to the Id in respective column in OrderHeader");
+        return customerServiceImpl.fetchCustomerIdAndSave(orderRequestDTO);
     }
 }

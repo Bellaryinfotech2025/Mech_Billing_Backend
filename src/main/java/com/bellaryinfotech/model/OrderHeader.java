@@ -350,6 +350,10 @@ public class OrderHeader {
     
     @Column(name = "original_order_number", length = 150)
     private String originalOrderNumber;
+    
+    
+    
+    
 
 	 
 

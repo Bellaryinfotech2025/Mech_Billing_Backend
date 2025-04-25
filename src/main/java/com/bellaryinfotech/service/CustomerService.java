@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import com.bellaryinfotech.DTOImpl.CustomerUpdateDTO;
 import com.bellaryinfotech.DTOImpl.OrderRequestDTO;
 import com.bellaryinfotech.model.CustomerAccount;
 
@@ -20,4 +21,6 @@ public interface CustomerService {
             Long custAcctSiteId, Long contactId, String roleType);
             
     public ResponseEntity<?> fetchCustomerIdAndSave(OrderRequestDTO orderRequestDTO);
+    
+    public ResponseEntity<?> updateCustomerDetails(CustomerUpdateDTO customerUpdateDTO);
 }

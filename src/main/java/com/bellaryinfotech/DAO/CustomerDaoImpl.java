@@ -1,5 +1,7 @@
 package com.bellaryinfotech.DAO;
 
+import java.sql.Date;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -10,8 +12,13 @@ import jakarta.persistence.TypedQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import com.bellaryinfotech.DTOImpl.CustomerAccountDTO;
+import com.bellaryinfotech.DTOImpl.CustomerContactDTO;
+import com.bellaryinfotech.DTOImpl.CustomerSiteDTO;
+import com.bellaryinfotech.DTOImpl.CustomerUpdateDTO;
 import com.bellaryinfotech.DTOImpl.OrderRequestDTO;
 import com.bellaryinfotech.model.CustomerAccount;
 import com.bellaryinfotech.model.CustomerAccountSite;
@@ -30,6 +37,8 @@ public class CustomerDaoImpl extends GenericDAOImpl implements CustomerDAO {
 
     @PersistenceContext
     private EntityManager entityManager;
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
     
     @Autowired
     private CustomerAccountRepository customerAccountRepository;
@@ -231,4 +240,110 @@ public class CustomerDaoImpl extends GenericDAOImpl implements CustomerDAO {
         
         return savedOrderHeader;
     }
+    
+    
+    
+    
+    @Override
+    public boolean updateCustomerDetails(CustomerUpdateDTO customerUpdateDTO) {
+        LOG.info("Updating customer details");
+        boolean updated = false;
+        
+        try {
+            // Update customer account if provided
+            if (customerUpdateDTO.getCustomerAccount() != null) {
+                CustomerAccountDTO accountDTO = customerUpdateDTO.getCustomerAccount();
+                if (accountDTO.getCustAccountId() != null) {
+                    CustomerAccount customerAccount = customerAccountRepository.findById(accountDTO.getCustAccountId())
+                            .orElse(null);
+                    
+                    if (customerAccount != null) {
+                        // Update fields if provided
+                        if (accountDTO.getAccountNumber() != null) {
+                            customerAccount.setAccountNumber(accountDTO.getAccountNumber());
+                        }
+                        if (accountDTO.getAccountName() != null) {
+                            customerAccount.setAccountName(accountDTO.getAccountName());
+                        }
+                        
+                        // Update audit fields
+                        customerAccount.setLastUpdateDate(Date.valueOf(LocalDate.now()));
+                        customerAccount.setLastUpdatedBy(1L); // Replace with actual user ID
+                        
+                        customerAccountRepository.save(customerAccount);
+                        LOG.info("Updated customer account with ID: {}", customerAccount.getCustAccountId());
+                        updated = true;
+                    } else {
+                        LOG.warn("Customer account not found with ID: {}", accountDTO.getCustAccountId());
+                    }
+                }
+            }
+            
+            // Update customer site if provided
+            if (customerUpdateDTO.getCustomerSite() != null) {
+                CustomerSiteDTO siteDTO = customerUpdateDTO.getCustomerSite();
+                if (siteDTO.getCustAcctSiteId() != null) {
+                    CustomerAccountSite customerSite = customerSiteRepository.findById(siteDTO.getCustAcctSiteId())
+                            .orElse(null);
+                    
+                    if (customerSite != null) {
+                        // Update fields if provided
+                        if (siteDTO.getSiteName() != null) {
+                            customerSite.setSiteName(siteDTO.getSiteName());
+                        }
+                        
+                        // Update audit fields
+                        customerSite.setLastUpdateDate(Date.valueOf(LocalDate.now()));
+                        customerSite.setLastUpdatedBy(1L); // Replace with actual user ID
+                        
+                        customerSiteRepository.save(customerSite);
+                        LOG.info("Updated customer site with ID: {}", customerSite.getCustAcctSiteId());
+                        updated = true;
+                    } else {
+                        LOG.warn("Customer site not found with ID: {}", siteDTO.getCustAcctSiteId());
+                    }
+                }
+            }
+            
+            // Update customer contact if provided
+            if (customerUpdateDTO.getCustomerContact() != null) {
+                CustomerContactDTO contactDTO = customerUpdateDTO.getCustomerContact();
+                if (contactDTO.getContactId() != null) {
+                    CustomerContact customerContact = customerContactRepository.findById(contactDTO.getContactId())
+                            .orElse(null);
+                    
+                    if (customerContact != null) {
+                        // Update fields if provided
+                        if (contactDTO.getRoleType() != null) {
+                            customerContact.setRoleType(contactDTO.getRoleType());
+                        }
+                        
+                        // Update audit fields
+                        customerContact.setLastUpdateDate(Date.valueOf(LocalDate.now()));
+                        customerContact.setLastUpdatedBy(1L); // Replace with actual user ID
+                        
+                        customerContactRepository.save(customerContact);
+                        LOG.info("Updated customer contact with ID: {}", customerContact.getContactId());
+                        updated = true;
+                    } else {
+                        LOG.warn("Customer contact not found with ID: {}", contactDTO.getContactId());
+                    }
+                }
+            }
+            
+            return updated;
+        } catch (Exception e) {
+            LOG.error("Error updating customer details: {}", e.getMessage(), e);
+            return false;
+        }
+        
+        
+        
+        
+        
+    }
+    
+    
 }
+    
+    

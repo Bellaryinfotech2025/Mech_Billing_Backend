@@ -1,5 +1,6 @@
 package com.bellaryinfotech.controller;
 
+import com.bellaryinfotech.DTOImpl.CustomerUpdateDTO;
 import com.bellaryinfotech.DTOImpl.OrderRequestDTO;
 import com.bellaryinfotech.service.CustomerService;
 import com.bellaryinfotech.service.CustomerServiceImpl;
@@ -26,6 +27,7 @@ public class CustomerController {
     public final String GET_ALL_SITES_DETAILS = "/getallaccountsitesall/details";
     public final String GET_ALL_CONTACTS_DETAILS = "/getallcustomercontacts/details";
     public final String FETCH_CUSTOMER_NAME = "/fetchcustomernames/details";
+    public final String UPDATE_CUSTOMER = "/updatecustomer/details";
     
     private static final Logger LOG = LoggerFactory.getLogger(CustomerServiceImpl.class);
     
@@ -79,5 +81,11 @@ public class CustomerController {
     public ResponseEntity<?> fetchCustomerIdAndSave(@RequestBody OrderRequestDTO orderRequestDTO) {
         LOG.info("Fetching customer Name and saving to the Id in respective column in OrderHeader");
         return customerServiceImpl.fetchCustomerIdAndSave(orderRequestDTO);
+    }
+    
+    @PutMapping(value = UPDATE_CUSTOMER, produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> updateCustomerDetails(@RequestBody CustomerUpdateDTO customerUpdateDTO) {
+        LOG.info("Updating customer details");
+        return customerServiceImpl.updateCustomerDetails(customerUpdateDTO);
     }
 }

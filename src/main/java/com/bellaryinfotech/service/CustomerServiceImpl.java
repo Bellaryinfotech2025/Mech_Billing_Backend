@@ -6,7 +6,9 @@ import jakarta.transaction.Transactional;
 
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
  
 import com.bellaryinfotech.DAO.CustomerDAO;
+import com.bellaryinfotech.DTOImpl.CustomerUpdateDTO;
 import com.bellaryinfotech.DTOImpl.OrderRequestDTO;
 import com.bellaryinfotech.model.CustomerAccount;
 import com.bellaryinfotech.model.CustomerAccountSite;
@@ -74,5 +77,41 @@ public class CustomerServiceImpl implements CustomerService{
         }
         
         return ResponseEntity.status(HttpStatus.OK).body(orderHeader);
+    }
+    
+    
+    
+    @Override
+    public ResponseEntity<?> updateCustomerDetails(CustomerUpdateDTO customerUpdateDTO) {
+        LOG.info("Updating customer details :: ");
+        
+        if (customerUpdateDTO == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Update data cannot be null");
+        }
+        
+        // Validate that at least one entity is provided for update
+        if (customerUpdateDTO.getCustomerAccount() == null && 
+            customerUpdateDTO.getCustomerSite() == null && 
+            customerUpdateDTO.getCustomerContact() == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No update data provided");
+        }
+        
+        // Validate IDs are provided
+        if ((customerUpdateDTO.getCustomerAccount() != null && customerUpdateDTO.getCustomerAccount().getCustAccountId() == null) ||
+            (customerUpdateDTO.getCustomerSite() != null && customerUpdateDTO.getCustomerSite().getCustAcctSiteId() == null) ||
+            (customerUpdateDTO.getCustomerContact() != null && customerUpdateDTO.getCustomerContact().getContactId() == null)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("ID is required for update");
+        }
+        
+        boolean updated = customerDao.updateCustomerDetails(customerUpdateDTO);
+        
+        if (updated) {
+            Map<String, String> response = new HashMap<>();
+            response.put("status", "success");
+            response.put("message", "Customer details updated successfully");
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No records were updated. Check if the provided IDs exist.");
+        }
     }
 }

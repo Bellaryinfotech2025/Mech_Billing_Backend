@@ -1,7 +1,5 @@
 package com.bellaryinfotech.controller;
 
- 
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +15,7 @@ import com.bellaryinfotech.service.OrderDetailsService;
 import java.util.*;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/V2.0")
 @CrossOrigin(origins = "*")
 public class OrderController {
 
@@ -48,6 +46,13 @@ public class OrderController {
             if (existingOrder == null) {
                 response.put("status", "error");
                 response.put("message", "Order not found");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Validate required fields
+            if (order.getOrderNumber() == null || order.getOrderNumber().isEmpty()) {
+                response.put("status", "error");
+                response.put("message", "Order number is required");
                 return ResponseEntity.badRequest().body(response);
             }
 
@@ -111,6 +116,4 @@ public class OrderController {
             return ResponseEntity.ok(errorResult);
         }
     }
-
 }
-

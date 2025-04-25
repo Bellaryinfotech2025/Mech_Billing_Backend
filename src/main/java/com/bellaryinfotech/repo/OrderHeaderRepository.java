@@ -7,5 +7,4 @@ import com.bellaryinfotech.model.OrderHeader;
 
 @Repository
 public interface OrderHeaderRepository extends JpaRepository<OrderHeader, Long> {
-    // You can add custom query methods here if needed
-}
+    }

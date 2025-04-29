@@ -16,7 +16,7 @@ import java.util.*;
 
 @RestController
 @RequestMapping("/api/V2.0")
-@CrossOrigin(origins = "*")
+ 
 public class OrderController {
 
     // --- From OrderDatabaseSearchController ---

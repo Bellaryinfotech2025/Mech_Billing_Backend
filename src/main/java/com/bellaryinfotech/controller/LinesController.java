@@ -13,7 +13,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/lines")
-@CrossOrigin(origins = "*")
+ 
 public class LinesController {
 
     @Autowired

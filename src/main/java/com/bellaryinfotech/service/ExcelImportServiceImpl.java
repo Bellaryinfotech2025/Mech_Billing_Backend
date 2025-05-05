@@ -1,10 +1,7 @@
 package com.bellaryinfotech.service;
- 
-
 
 import com.bellaryinfotech.model.OrderFabricationImport;
 import com.bellaryinfotech.repo.OrderFabricationImportRepository;
-import com.bellaryinfotech.service.ExcelImportService;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
@@ -27,7 +24,7 @@ public class ExcelImportServiceImpl implements ExcelImportService {
 
     // Define column mappings for Excel headers to entity fields
     private static final Map<String, String> COLUMN_MAPPINGS = new HashMap<>();
-    
+
     static {
         // Map Excel column names to entity field names (case insensitive)
         COLUMN_MAPPINGS.put("BUILDING_NAME", "buildingName");
@@ -74,11 +71,19 @@ public class ExcelImportServiceImpl implements ExcelImportService {
         COLUMN_MAPPINGS.put("REPEATED QUANTITY", "repeatedQty");
         COLUMN_MAPPINGS.put("EREC. MKD. WT.", "repeatedQty");
         COLUMN_MAPPINGS.put("REMARKS", "remark");
+        
+        // Add numeric headers (for Excel files that might have numeric headers)
+        COLUMN_MAPPINGS.put("1", "buildingName");
+        COLUMN_MAPPINGS.put("2", "drawingNo");
+        COLUMN_MAPPINGS.put("3", "drawingDescription");
+        COLUMN_MAPPINGS.put("4", "orderNumber");
     }
 
     @Override
     public List<OrderFabricationImport> importExcelToDatabase(MultipartFile file) throws Exception {
         List<OrderFabricationImport> importList = new ArrayList<>();
+        int successCount = 0;
+        int failureCount = 0;
         
         try (InputStream is = file.getInputStream();
              Workbook workbook = new XSSFWorkbook(is)) {
@@ -99,11 +104,6 @@ public class ExcelImportServiceImpl implements ExcelImportService {
             Map<Integer, String> columnIndexToFieldMap = mapHeadersToFields(headerRow);
             log.info("Mapped {} columns in sheet {}", columnIndexToFieldMap.size(), sheet.getSheetName());
             
-            if (columnIndexToFieldMap.isEmpty()) {
-                log.error("No valid column mappings found. Check your Excel headers.");
-                throw new Exception("No valid column mappings found. Check your Excel headers.");
-            }
-            
             // Process data rows
             for (int rowNum = 1; rowNum <= sheet.getLastRowNum(); rowNum++) {
                 Row row = sheet.getRow(rowNum);
@@ -113,7 +113,7 @@ public class ExcelImportServiceImpl implements ExcelImportService {
                 
                 // Create a new entity for each row
                 OrderFabricationImport entity = new OrderFabricationImport();
-                entity.setIfaceStatus("NEW");
+                entity.setIfaceStatus("PENDING"); // Set initial status as PENDING
                 entity.setCreationDate(new Date());
                 entity.setLastUpdateDate(new Date());
                 
@@ -123,14 +123,30 @@ public class ExcelImportServiceImpl implements ExcelImportService {
                 if (hasData) {
                     // Set batch_name as a combination of building_name and drawing_no
                     setBatchName(entity);
+                    
+                    // Validate the entity but don't reject it if invalid
+                    boolean isValid = validateEntity(entity);
+                    
+                    if (isValid) {
+                        entity.setIfaceStatus("SUCCESS"); // Mark as SUCCESS if valid
+                        successCount++;
+                    } else {
+                        entity.setIfaceStatus("ERROR"); // Mark as ERROR if invalid
+                        if (entity.getErrorMessage() == null) {
+                            entity.setErrorMessage("Invalid or incomplete data");
+                        }
+                        failureCount++;
+                    }
+                    
                     log.debug("Adding entity to import list: {}", entity);
                     importList.add(entity);
                 }
             }
             
-            // Save all records to database
+            // Save all records to database regardless of validation status
             if (!importList.isEmpty()) {
-                log.info("Saving {} records to database", importList.size());
+                log.info("Saving {} records to database (Success: {}, Failure: {})", 
+                        importList.size(), successCount, failureCount);
                 importList = repository.saveAll(importList);
                 log.info("Successfully saved {} records", importList.size());
             } else {
@@ -143,28 +159,94 @@ public class ExcelImportServiceImpl implements ExcelImportService {
             throw e;
         }
     }
-    
+
+    // Helper method to validate entity but don't reject if invalid
+    private boolean validateEntity(OrderFabricationImport entity) {
+        boolean isValid = true;
+        
+        // Check for required fields but don't reject the entity
+        if (entity.getOrderNumber() == null || entity.getOrderNumber().trim().isEmpty()) {
+            entity.setErrorMessage("Order Number is required");
+            isValid = false;
+        }
+        
+        if (entity.getDrawingNo() == null || entity.getDrawingNo().trim().isEmpty()) {
+            String currentError = entity.getErrorMessage();
+            if (currentError == null) {
+                entity.setErrorMessage("Drawing Number is required");
+            } else {
+                entity.setErrorMessage(currentError + "; Drawing Number is required");
+            }
+            isValid = false;
+        }
+        
+        // Add more validation rules as needed
+        
+        return isValid;
+    }
+
     // Helper method to set batch_name
     private void setBatchName(OrderFabricationImport entity) {
         String buildingName = entity.getBuildingName();
         String drawingNo = entity.getDrawingNo();
         
-        if (buildingName != null || drawingNo != null) {
-            String building = buildingName != null ? buildingName : "";
-            String drawing = drawingNo != null ? drawingNo : "";
-            String batchName = building + ((!building.isEmpty() && !drawing.isEmpty()) ? " " : "") + drawing;
-            entity.setBatchName(batchName);
-            log.debug("Set batch_name to: {}", batchName);
-        }
+        // Default values if null
+        if (buildingName == null) buildingName = "Unknown Building";
+        if (drawingNo == null) drawingNo = "Unknown Drawing";
+        
+        String batchName = buildingName + " " + drawingNo;
+        entity.setBatchName(batchName);
+        log.debug("Set batch_name to: {}", batchName);
     }
-    
+
+    // UPDATED: This method now handles different cell types for headers
     private Map<Integer, String> mapHeadersToFields(Row headerRow) {
         Map<Integer, String> columnIndexToFieldMap = new HashMap<>();
         
         for (int i = 0; i < headerRow.getLastCellNum(); i++) {
             Cell cell = headerRow.getCell(i);
             if (cell != null) {
-                String headerValue = cell.getStringCellValue().trim().toUpperCase();
+                String headerValue;
+                
+                // Handle different cell types for headers
+                switch (cell.getCellType()) {
+                    case STRING:
+                        headerValue = cell.getStringCellValue().trim().toUpperCase();
+                        break;
+                    case NUMERIC:
+                        // Convert numeric cell to string
+                        double numValue = cell.getNumericCellValue();
+                        if (numValue == Math.floor(numValue)) {
+                            // It's an integer
+                            headerValue = String.valueOf((int)numValue).trim().toUpperCase();
+                        } else {
+                            // It's a decimal
+                            headerValue = String.valueOf(numValue).trim().toUpperCase();
+                        }
+                        break;
+                    case FORMULA:
+                        try {
+                            headerValue = cell.getStringCellValue().trim().toUpperCase();
+                        } catch (Exception e) {
+                            try {
+                                double formulaValue = cell.getNumericCellValue();
+                                if (formulaValue == Math.floor(formulaValue)) {
+                                    headerValue = String.valueOf((int)formulaValue).trim().toUpperCase();
+                                } else {
+                                    headerValue = String.valueOf(formulaValue).trim().toUpperCase();
+                                }
+                            } catch (Exception ex) {
+                                log.warn("Could not evaluate formula in header cell at index {}: {}", i, ex.getMessage());
+                                continue;
+                            }
+                        }
+                        break;
+                    default:
+                        // Skip other cell types
+                        log.warn("Skipping header at index {} due to unsupported cell type: {}", i, cell.getCellType());
+                        continue;
+                }
+                
                 log.info("Found header: '{}' at index {}", headerValue, i);
                 
                 // Check if this header is in our mapping
@@ -180,7 +262,7 @@ public class ExcelImportServiceImpl implements ExcelImportService {
         
         return columnIndexToFieldMap;
     }
-    
+
     private boolean processRowData(Row row, Map<Integer, String> columnIndexToFieldMap, OrderFabricationImport entity) {
         boolean hasData = false;
         
@@ -200,15 +282,21 @@ public class ExcelImportServiceImpl implements ExcelImportService {
                     }
                 } catch (Exception e) {
                     log.error("Error setting field {} from column {}: {}", fieldName, columnIndex, e.getMessage(), e);
-                    entity.setErrorMessage("Error in column " + columnIndex + ": " + e.getMessage());
-                    entity.setIfaceStatus("ERROR");
+                    // Store the error but continue processing
+                    String currentError = entity.getErrorMessage();
+                    if (currentError == null) {
+                        entity.setErrorMessage("Error in column " + columnIndex + ": " + e.getMessage());
+                    } else {
+                        entity.setErrorMessage(currentError + "; Error in column " + columnIndex + ": " + e.getMessage());
+                    }
                 }
             }
         }
         
+        // If we have any data at all, return true
         return hasData;
     }
-    
+
     private boolean isRowEmpty(Row row) {
         if (row == null) {
             return true;
@@ -222,7 +310,7 @@ public class ExcelImportServiceImpl implements ExcelImportService {
         }
         return true;
     }
-    
+
     private boolean setFieldValue(OrderFabricationImport entity, String fieldName, Cell cell) {
         try {
             String stringValue = getCellValueAsString(cell);
@@ -377,11 +465,10 @@ public class ExcelImportServiceImpl implements ExcelImportService {
         } catch (Exception e) {
             log.error("Error setting field {}: {}", fieldName, e.getMessage(), e);
             entity.setErrorMessage("Error setting field " + fieldName + ": " + e.getMessage());
-            entity.setIfaceStatus("ERROR");
             return false;
         }
     }
-    
+
     private String getCellValueAsString(Cell cell) {
         if (cell == null) {
             return null;
@@ -425,7 +512,7 @@ public class ExcelImportServiceImpl implements ExcelImportService {
             return null;
         }
     }
-    
+
     private BigDecimal getCellValueAsBigDecimal(Cell cell) {
         if (cell == null) {
             return null;
@@ -475,5 +562,3 @@ public class ExcelImportServiceImpl implements ExcelImportService {
         }
     }
 }
-
-

@@ -38,6 +38,14 @@ public interface OrderFabricationImportRepository extends JpaRepository<OrderFab
     // Find by status with pagination
     Page<OrderFabricationImport> findByIfaceStatus(String ifaceStatus, Pageable pageable);
     
+    // ADD THESE NEW METHODS - These were missing in your repository
+    // Find by line number (String version)
+    @Query("SELECT o FROM OrderFabricationImport o WHERE CAST(o.lineNumber AS string) = :lineNumber")
+    List<OrderFabricationImport> findByLineNumber(@Param("lineNumber") String lineNumber);
+    
+    // Find by line number (Long version)
+    List<OrderFabricationImport> findByLineNumber(Long lineNumber);
+    
     // Custom query to search across multiple fields
     @Query("SELECT o FROM OrderFabricationImport o WHERE " +
            "(:search IS NULL OR " +

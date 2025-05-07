@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/V2.0")
@@ -274,7 +275,7 @@ public class FabricationImportController {
             // Original Line No column
             Map<String, Object> origLineNoCol = new HashMap<>();
             origLineNoCol.put("id", "origLineNo");
-            origLineNoCol.put("label", "Original Line No");
+            orderNumberCol.put("label", "Original Line No");
             origLineNoCol.put("width", "120px");
             origLineNoCol.put("placeholder", "Enter original line");
             origLineNoCol.put("hasIcon", true);
@@ -401,6 +402,98 @@ public class FabricationImportController {
                     .body(Map.of(
                         "status", "error",
                         "message", "Failed to retrieve fabrication columns: " + e.getMessage()
+                    ));
+        }
+    }
+    
+    // ADD THIS NEW ENDPOINT - This was missing in your controller
+    @GetMapping("/fabrication-by-line")
+    public ResponseEntity<?> getFabricationByLine(@RequestParam(required = false) String lineNumber) {
+        try {
+            log.info("Fetching fabrication data for line number: {}", lineNumber);
+            
+            List<OrderFabricationImport> records;
+            
+            if (lineNumber != null && !lineNumber.isEmpty()) {
+                // Try to parse the line number - it could be a decimal like "1.1"
+                try {
+                    // First try to find by exact string match
+                    records = repository.findByLineNumber(lineNumber);
+                    
+                    // If no records found, try to parse as Long if possible
+                    if (records.isEmpty() && !lineNumber.contains(".")) {
+                        Long lineNumberLong = Long.parseLong(lineNumber);
+                        records = repository.findByLineNumber(lineNumberLong);
+                    }
+                } catch (NumberFormatException e) {
+                    // If parsing fails, just use the string version
+                    records = repository.findByLineNumber(lineNumber);
+                }
+            } else {
+                // If no line number provided, return latest records
+                records = repository.findTop100ByOrderByIfaceIdDesc();
+            }
+            
+            log.info("Found {} records for line number: {}", records.size(), lineNumber);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("data", records);
+            response.put("totalItems", records.size());
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Failed to retrieve fabrication data by line", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of(
+                        "status", "error",
+                        "message", "Failed to retrieve fabrication data: " + e.getMessage()
+                    ));
+        }
+    }
+    
+    // ADD THIS NEW ENDPOINT FOR DELETING BY IFACE_ID
+    @DeleteMapping("/fabrication/{ifaceId}")
+    public ResponseEntity<?> deleteFabrication(@PathVariable Long ifaceId) {
+        try {
+            log.info("Deleting fabrication record with ifaceId: {}", ifaceId);
+        
+            // Check if the record exists
+            boolean exists = repository.existsById(ifaceId);
+            log.info("Record with ifaceId {} exists: {}", ifaceId, exists);
+        
+            if (!exists) {
+                log.warn("Fabrication record with ifaceId {} not found", ifaceId);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of(
+                            "status", "error",
+                            "message", "Fabrication record not found with ifaceId: " + ifaceId
+                        ));
+            }
+        
+            // Get the record before deleting (for logging purposes)
+            Optional<OrderFabricationImport> record = repository.findById(ifaceId);
+            if (record.isPresent()) {
+                OrderFabricationImport fabrication = record.get();
+                log.info("Found record to delete: ifaceId={}, orderNumber={}, lineNumber={}",
+                        fabrication.getIfaceId(), fabrication.getOrderNumber(), fabrication.getLineNumber());
+            }
+        
+            // Delete the record
+            repository.deleteById(ifaceId);
+            log.info("Successfully deleted fabrication record with ifaceId: {}", ifaceId);
+        
+            return ResponseEntity.ok(Map.of(
+                "status", "success",
+                "message", "Fabrication record deleted successfully",
+                "ifaceId", ifaceId
+            ));
+        } catch (Exception e) {
+            log.error("Failed to delete fabrication record with ifaceId {}: {}", ifaceId, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of(
+                        "status", "error",
+                        "message", "Failed to delete fabrication record: " + e.getMessage(),
+                        "details", e.toString()
                     ));
         }
     }

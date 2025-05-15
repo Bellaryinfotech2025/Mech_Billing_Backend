@@ -1,0 +1,272 @@
+package com.bellaryinfotech.service;
+ 
+
+import jakarta.persistence.EntityNotFoundException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.bellaryinfotech.DAO.LookupDAO;
+import com.bellaryinfotech.DAO.OrderFabricationDetailDAO;
+import com.bellaryinfotech.DTO.OrderFabricationDetailDTO;
+import com.bellaryinfotech.model.OrderFabricationDetail;
+import com.bellaryinfotech.service.OrderFabricationDetailService;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+public class OrderFabricationDetailServiceImpl implements OrderFabricationDetailService {
+    
+    private static final String UOM_LOOKUP_TYPE = "fabrication_uom";
+    
+    private final OrderFabricationDetailDAO orderFabricationDetailDAO;
+    private final LookupDAO lookupDAO;
+    
+    @Autowired
+    public OrderFabricationDetailServiceImpl(OrderFabricationDetailDAO orderFabricationDetailDAO, LookupDAO lookupDAO) {
+        this.orderFabricationDetailDAO = orderFabricationDetailDAO;
+        this.lookupDAO = lookupDAO;
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public List<OrderFabricationDetailDTO> findAll() {
+        return orderFabricationDetailDAO.findAll().stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public OrderFabricationDetailDTO findById(Long id) {
+        return orderFabricationDetailDAO.findById(id)
+                .map(this::convertToDTO)
+                .orElseThrow(() -> new EntityNotFoundException("Order Fabrication Detail not found with id: " + id));
+    }
+    
+    @Override
+    @Transactional
+    public OrderFabricationDetailDTO save(OrderFabricationDetailDTO orderFabricationDetailDTO) {
+        OrderFabricationDetail orderFabricationDetail = convertToEntity(orderFabricationDetailDTO);
+        
+        // Set creation and update dates
+        LocalDateTime now = LocalDateTime.now();
+        orderFabricationDetail.setCreatedDate(now);
+        orderFabricationDetail.setCreationDate(LocalDate.now());
+        
+        OrderFabricationDetail savedEntity = orderFabricationDetailDAO.save(orderFabricationDetail);
+        return convertToDTO(savedEntity);
+    }
+    
+    @Override
+    @Transactional
+    public OrderFabricationDetailDTO update(Long id, OrderFabricationDetailDTO orderFabricationDetailDTO) {
+        OrderFabricationDetail existingEntity = orderFabricationDetailDAO.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Order Fabrication Detail not found with id: " + id));
+        
+        // Update fields from DTO
+        updateEntityFromDTO(existingEntity, orderFabricationDetailDTO);
+        
+        // Set update dates
+        existingEntity.setUpdatedDate(LocalDateTime.now());
+        existingEntity.setLastUpdateDate(LocalDate.now());
+        
+        OrderFabricationDetail updatedEntity = orderFabricationDetailDAO.save(existingEntity);
+        return convertToDTO(updatedEntity);
+    }
+    
+    @Override
+    @Transactional
+    public void deleteById(Long id) {
+        if (!orderFabricationDetailDAO.findById(id).isPresent()) {
+            throw new EntityNotFoundException("Order Fabrication Detail not found with id: " + id);
+        }
+        orderFabricationDetailDAO.deleteById(id);
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public List<OrderFabricationDetailDTO> findByOrderId(Long orderId) {
+        return orderFabricationDetailDAO.findByOrderId(orderId).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public List<OrderFabricationDetailDTO> findByBuildingName(String buildingName) {
+        return orderFabricationDetailDAO.findByBuildingName(buildingName).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public List<OrderFabricationDetailDTO> findByDrawingNo(String drawingNo) {
+        return orderFabricationDetailDAO.findByDrawingNo(drawingNo).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public List<OrderFabricationDetailDTO> findByOrderNumber(String orderNumber) {
+        return orderFabricationDetailDAO.findByOrderNumber(orderNumber).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+    
+    private OrderFabricationDetailDTO convertToDTO(OrderFabricationDetail entity) {
+        OrderFabricationDetailDTO dto = new OrderFabricationDetailDTO();
+        
+        // Copy basic properties
+        dto.setId(entity.getId());
+        dto.setBuildingName(entity.getBuildingName());
+        dto.setDrawingNo(entity.getDrawingNo());
+        dto.setDrawingDescription(entity.getDrawingDescription());
+        dto.setOrderNumber(entity.getOrderNumber());
+        dto.setOrderId(entity.getOrderId());
+        dto.setOrigLineNumber(entity.getOrigLineNumber());
+        dto.setOrigLineId(entity.getOrigLineId());
+        dto.setLineNumber(entity.getLineNumber());
+        dto.setLineId(entity.getLineId());
+        dto.setErectionMkd(entity.getErectionMkd());
+        dto.setItemNo(entity.getItemNo());
+        dto.setSection(entity.getSection());
+        dto.setLength(entity.getLength());
+        dto.setQuantity(entity.getQuantity());
+        dto.setUnitPrice(entity.getUnitPrice());
+        dto.setTotalQuantity(entity.getTotalQuantity());
+        dto.setOriginalQuantity(entity.getOriginalQuantity());
+        dto.setRepeatedQty(entity.getRepeatedQty());
+        dto.setRemark(entity.getRemark());
+        dto.setTenantId(entity.getTenantId());
+        dto.setCreationDate(entity.getCreationDate());
+        dto.setCreatedBy(entity.getCreatedBy());
+        dto.setLastUpdateDate(entity.getLastUpdateDate());
+        dto.setLastUpdatedBy(entity.getLastUpdatedBy());
+        dto.setOrgId(entity.getOrgId());
+        dto.setCreatedDate(entity.getCreatedDate());
+        dto.setUpdatedBy(entity.getUpdatedBy());
+        dto.setUpdatedDate(entity.getUpdatedDate());
+        dto.setVersion(entity.getVersion());
+        
+        // Set UOM codes and meanings
+        dto.setLengthUom(entity.getLengthUom());
+        dto.setLengthUomMeaning(lookupDAO.getMeaningByTypeAndCode(UOM_LOOKUP_TYPE, entity.getLengthUom()));
+        
+        dto.setUnitPriceUom(entity.getUnitPriceUom());
+        dto.setUnitPriceUomMeaning(lookupDAO.getMeaningByTypeAndCode(UOM_LOOKUP_TYPE, entity.getUnitPriceUom()));
+        
+        dto.setTotalQuantityUom(entity.getTotalQuantityUom());
+        dto.setTotalQuantityUomMeaning(lookupDAO.getMeaningByTypeAndCode(UOM_LOOKUP_TYPE, entity.getTotalQuantityUom()));
+        
+        return dto;
+    }
+    
+    private OrderFabricationDetail convertToEntity(OrderFabricationDetailDTO dto) {
+        OrderFabricationDetail entity = new OrderFabricationDetail();
+        
+        // Copy basic properties
+        entity.setId(dto.getId());
+        entity.setBuildingName(dto.getBuildingName());
+        entity.setDrawingNo(dto.getDrawingNo());
+        entity.setDrawingDescription(dto.getDrawingDescription());
+        entity.setOrderNumber(dto.getOrderNumber());
+        entity.setOrderId(dto.getOrderId());
+        entity.setOrigLineNumber(dto.getOrigLineNumber());
+        entity.setOrigLineId(dto.getOrigLineId());
+        entity.setLineNumber(dto.getLineNumber());
+        entity.setLineId(dto.getLineId());
+        entity.setErectionMkd(dto.getErectionMkd());
+        entity.setItemNo(dto.getItemNo());
+        entity.setSection(dto.getSection());
+        entity.setLength(dto.getLength());
+        entity.setQuantity(dto.getQuantity());
+        entity.setUnitPrice(dto.getUnitPrice());
+        entity.setTotalQuantity(dto.getTotalQuantity());
+        entity.setOriginalQuantity(dto.getOriginalQuantity());
+        entity.setRepeatedQty(dto.getRepeatedQty());
+        entity.setRemark(dto.getRemark());
+        entity.setTenantId(dto.getTenantId());
+        entity.setCreationDate(dto.getCreationDate());
+        entity.setCreatedBy(dto.getCreatedBy());
+        entity.setLastUpdateDate(dto.getLastUpdateDate());
+        entity.setLastUpdatedBy(dto.getLastUpdatedBy());
+        entity.setOrgId(dto.getOrgId());
+        entity.setCreatedDate(dto.getCreatedDate());
+        entity.setUpdatedBy(dto.getUpdatedBy());
+        entity.setUpdatedDate(dto.getUpdatedDate());
+        entity.setVersion(dto.getVersion());
+        
+        // Convert UOM meanings to codes if provided, otherwise use the codes directly
+        // Also ensure all UOM codes are stored in uppercase
+        if (dto.getLengthUomMeaning() != null && !dto.getLengthUomMeaning().isEmpty()) {
+            entity.setLengthUom(lookupDAO.getCodeByTypeAndMeaning(UOM_LOOKUP_TYPE, dto.getLengthUomMeaning()));
+        } else if (dto.getLengthUom() != null) {
+            entity.setLengthUom(dto.getLengthUom().toUpperCase());
+        }
+        
+        if (dto.getUnitPriceUomMeaning() != null && !dto.getUnitPriceUomMeaning().isEmpty()) {
+            entity.setUnitPriceUom(lookupDAO.getCodeByTypeAndMeaning(UOM_LOOKUP_TYPE, dto.getUnitPriceUomMeaning()));
+        } else if (dto.getUnitPriceUom() != null) {
+            entity.setUnitPriceUom(dto.getUnitPriceUom().toUpperCase());
+        }
+        
+        if (dto.getTotalQuantityUomMeaning() != null && !dto.getTotalQuantityUomMeaning().isEmpty()) {
+            entity.setTotalQuantityUom(lookupDAO.getCodeByTypeAndMeaning(UOM_LOOKUP_TYPE, dto.getTotalQuantityUomMeaning()));
+        } else if (dto.getTotalQuantityUom() != null) {
+            entity.setTotalQuantityUom(dto.getTotalQuantityUom().toUpperCase());
+        }
+        
+        return entity;
+    }
+    
+    private void updateEntityFromDTO(OrderFabricationDetail entity, OrderFabricationDetailDTO dto) {
+        entity.setBuildingName(dto.getBuildingName());
+        entity.setDrawingNo(dto.getDrawingNo());
+        entity.setDrawingDescription(dto.getDrawingDescription());
+        entity.setOrderNumber(dto.getOrderNumber());
+        entity.setOrderId(dto.getOrderId());
+        entity.setOrigLineNumber(dto.getOrigLineNumber());
+        entity.setOrigLineId(dto.getOrigLineId());
+        entity.setLineNumber(dto.getLineNumber());
+        entity.setLineId(dto.getLineId());
+        entity.setErectionMkd(dto.getErectionMkd());
+        entity.setItemNo(dto.getItemNo());
+        entity.setSection(dto.getSection());
+        entity.setLength(dto.getLength());
+        entity.setQuantity(dto.getQuantity());
+        entity.setUnitPrice(dto.getUnitPrice());
+        entity.setTotalQuantity(dto.getTotalQuantity());
+        entity.setOriginalQuantity(dto.getOriginalQuantity());
+        entity.setRepeatedQty(dto.getRepeatedQty());
+        entity.setRemark(dto.getRemark());
+        entity.setTenantId(dto.getTenantId());
+        entity.setLastUpdatedBy(dto.getLastUpdatedBy());
+        entity.setOrgId(dto.getOrgId());
+        entity.setUpdatedBy(dto.getUpdatedBy());
+        
+        // Convert UOM meanings to codes if provided, ensure all UOM codes are stored in uppercase
+        if (dto.getLengthUomMeaning() != null && !dto.getLengthUomMeaning().isEmpty()) {
+            entity.setLengthUom(lookupDAO.getCodeByTypeAndMeaning(UOM_LOOKUP_TYPE, dto.getLengthUomMeaning()));
+        } else if (dto.getLengthUom() != null) {
+            entity.setLengthUom(dto.getLengthUom().toUpperCase());
+        }
+        
+        if (dto.getUnitPriceUomMeaning() != null && !dto.getUnitPriceUomMeaning().isEmpty()) {
+            entity.setUnitPriceUom(lookupDAO.getCodeByTypeAndMeaning(UOM_LOOKUP_TYPE, dto.getUnitPriceUomMeaning()));
+        } else if (dto.getUnitPriceUom() != null) {
+            entity.setUnitPriceUom(dto.getUnitPriceUom().toUpperCase());
+        }
+        
+        if (dto.getTotalQuantityUomMeaning() != null && !dto.getTotalQuantityUomMeaning().isEmpty()) {
+            entity.setTotalQuantityUom(lookupDAO.getCodeByTypeAndMeaning(UOM_LOOKUP_TYPE, dto.getTotalQuantityUomMeaning()));
+        } else if (dto.getTotalQuantityUom() != null) {
+            entity.setTotalQuantityUom(dto.getTotalQuantityUom().toUpperCase());
+        }
+    }
+}

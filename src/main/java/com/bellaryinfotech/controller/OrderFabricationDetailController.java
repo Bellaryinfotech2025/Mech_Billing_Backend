@@ -8,7 +8,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v3.0")
@@ -17,7 +19,8 @@ public class OrderFabricationDetailController {
     private final OrderFabricationDetailService orderFabricationDetailService;
     
     @Autowired
-    public OrderFabricationDetailController(OrderFabricationDetailService orderFabricationDetailService) {
+    public OrderFabricationDetailController(
+            OrderFabricationDetailService orderFabricationDetailService) {
         this.orderFabricationDetailService = orderFabricationDetailService;
     }
     
@@ -91,5 +94,54 @@ public class OrderFabricationDetailController {
             @PathVariable String orderNumber) {
         List<OrderFabricationDetailDTO> orderFabricationDetails = orderFabricationDetailService.findByOrderNumber(orderNumber);
         return ResponseEntity.ok(orderFabricationDetails);
+    }
+    
+    @GetMapping("/loadingfabricatiodetail/erection/{erectionMkd}")
+    public ResponseEntity<List<OrderFabricationDetailDTO>> getOrderFabricationDetailsByErectionMkd(
+            @PathVariable String erectionMkd) {
+        List<OrderFabricationDetailDTO> orderFabricationDetails = orderFabricationDetailService.findByErectionMkd(erectionMkd);
+        return ResponseEntity.ok(orderFabricationDetails);
+    }
+    
+    @GetMapping("/loadingfabricatiodetail/line/{lineNumber}/erection/{erectionMkd}")
+    public ResponseEntity<Map<String, Object>> getOrderFabricationDetailsByLineNumberAndErectionMkd(
+            @PathVariable String lineNumber,
+            @PathVariable String erectionMkd) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            List<OrderFabricationDetailDTO> fabricationDetails = 
+                    orderFabricationDetailService.findByLineNumberAndErectionMkd(lineNumber, erectionMkd);
+            
+            response.put("status", "success");
+            response.put("fabricationDetails", fabricationDetails);
+            response.put("count", fabricationDetails.size());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+    
+    @GetMapping("/loadingfabricatiodetail/line-id/{lineId}/erection/{erectionMkd}")
+    public ResponseEntity<Map<String, Object>> getOrderFabricationDetailsByLineIdAndErectionMkd(
+            @PathVariable Long lineId,
+            @PathVariable String erectionMkd) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            List<OrderFabricationDetailDTO> fabricationDetails = 
+                    orderFabricationDetailService.findByLineIdAndErectionMkd(lineId, erectionMkd);
+            
+            response.put("status", "success");
+            response.put("fabricationDetails", fabricationDetails);
+            response.put("count", fabricationDetails.size());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
     }
 }

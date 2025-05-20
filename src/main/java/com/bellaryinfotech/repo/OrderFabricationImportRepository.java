@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Repository
@@ -38,13 +39,12 @@ public interface OrderFabricationImportRepository extends JpaRepository<OrderFab
     // Find by status with pagination
     Page<OrderFabricationImport> findByIfaceStatus(String ifaceStatus, Pageable pageable);
     
-    // ADD THESE NEW METHODS - These were missing in your repository
-    // Find by line number (String version)
+    // Find by line number (String version) - UPDATED for BigDecimal
     @Query("SELECT o FROM OrderFabricationImport o WHERE CAST(o.lineNumber AS string) = :lineNumber")
-    List<OrderFabricationImport> findByLineNumber(@Param("lineNumber") String lineNumber);
+    List<OrderFabricationImport> findByLineNumberAsString(@Param("lineNumber") String lineNumber);
     
-    // Find by line number (Long version)
-    List<OrderFabricationImport> findByLineNumber(Long lineNumber);
+    // Find by line number (BigDecimal version) - UPDATED for BigDecimal
+    List<OrderFabricationImport> findByLineNumber(BigDecimal lineNumber);
     
     // Custom query to search across multiple fields
     @Query("SELECT o FROM OrderFabricationImport o WHERE " +
@@ -53,4 +53,23 @@ public interface OrderFabricationImportRepository extends JpaRepository<OrderFab
            "LOWER(o.drawingNo) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
            "LOWER(o.buildingName) LIKE LOWER(CONCAT('%', :search, '%')))")
     Page<OrderFabricationImport> findBySearchTerm(@Param("search") String search, Pageable pageable);
+    
+    // NEW METHODS FOR ERECTION MKD FILTERING
+    
+    // Find by erection MKD
+    List<OrderFabricationImport> findByErectionMkdContainingIgnoreCase(String erectionMkd);
+    
+    // Find by line number and erection MKD - UPDATED for BigDecimal
+    List<OrderFabricationImport> findByLineNumberAndErectionMkdContainingIgnoreCase(BigDecimal lineNumber, String erectionMkd);
+    
+    // Find by line ID and erection MKD
+    List<OrderFabricationImport> findByLineIdAndErectionMkdContainingIgnoreCase(Long lineId, String erectionMkd);
+    
+    // Find by approximate line number (for handling precision issues) - NEW
+    @Query("SELECT o FROM OrderFabricationImport o WHERE " +
+           "ABS(o.lineNumber - :lineNumber) < 0.001 AND " +
+           "LOWER(o.erectionMkd) LIKE LOWER(CONCAT('%', :erectionMkd, '%'))")
+    List<OrderFabricationImport> findByApproximateLineNumberAndErectionMkd(
+            @Param("lineNumber") BigDecimal lineNumber, 
+            @Param("erectionMkd") String erectionMkd);
 }

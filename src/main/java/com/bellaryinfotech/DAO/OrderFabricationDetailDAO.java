@@ -1,6 +1,5 @@
 package com.bellaryinfotech.DAO;
  
-
 import com.bellaryinfotech.model.OrderFabricationDetail;
 
 import java.util.List;
@@ -23,4 +22,8 @@ public interface OrderFabricationDetailDAO {
     List<OrderFabricationDetail> findByDrawingNo(String drawingNo);
     
     List<OrderFabricationDetail> findByOrderNumber(String orderNumber);
+    
+    List<OrderFabricationDetail> findByErectionMkd(String erectionMkd);
+    
+    List<OrderFabricationDetail> findByLineIdAndErectionMkd(Long lineId, String erectionMkd);
 }

@@ -1,6 +1,5 @@
 package com.bellaryinfotech.service;
  
-
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -10,10 +9,11 @@ import com.bellaryinfotech.DAO.LookupDAO;
 import com.bellaryinfotech.DAO.OrderFabricationDetailDAO;
 import com.bellaryinfotech.DTO.OrderFabricationDetailDTO;
 import com.bellaryinfotech.model.OrderFabricationDetail;
-import com.bellaryinfotech.service.OrderFabricationDetailService;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -117,6 +117,43 @@ public class OrderFabricationDetailServiceImpl implements OrderFabricationDetail
         return orderFabricationDetailDAO.findByOrderNumber(orderNumber).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public List<OrderFabricationDetailDTO> findByErectionMkd(String erectionMkd) {
+        return orderFabricationDetailDAO.findByErectionMkd(erectionMkd).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public List<OrderFabricationDetailDTO> findByLineIdAndErectionMkd(Long lineId, String erectionMkd) {
+        return orderFabricationDetailDAO.findByLineIdAndErectionMkd(lineId, erectionMkd).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public List<OrderFabricationDetailDTO> findByLineNumberAndErectionMkd(String lineNumber, String erectionMkd) {
+        // First, find all fabrication details with the given erection code
+        List<OrderFabricationDetail> fabricationDetails = orderFabricationDetailDAO.findByErectionMkd(erectionMkd);
+        
+        // Filter the results to only include those where the line number matches
+        // We need to convert the String lineNumber to BigDecimal for comparison
+        try {
+            BigDecimal lineNumberAsBigDecimal = new BigDecimal(lineNumber);
+            return fabricationDetails.stream()
+                    .filter(detail -> detail.getLineNumber() != null && 
+                                     detail.getLineNumber().compareTo(lineNumberAsBigDecimal) == 0)
+                    .map(this::convertToDTO)
+                    .collect(Collectors.toList());
+        } catch (NumberFormatException e) {
+            // If the line number can't be converted to BigDecimal, return empty list
+            return Collections.emptyList();
+        }
     }
     
     private OrderFabricationDetailDTO convertToDTO(OrderFabricationDetail entity) {

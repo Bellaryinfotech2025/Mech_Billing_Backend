@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 public class ExcelImportServiceImpl implements ExcelImportService {
@@ -32,7 +33,9 @@ public class ExcelImportServiceImpl implements ExcelImportService {
         COLUMN_MAPPINGS.put("DRAWING_DESCRIPTION", "drawingDescription");
         COLUMN_MAPPINGS.put("ORDER_NUMBER", "orderNumber");
         COLUMN_MAPPINGS.put("ORIG_LINE_NUMBER", "origLineNumber");
+        COLUMN_MAPPINGS.put("ORIG_LINE_ID", "origLineId");  // Added mapping for orig_line_id
         COLUMN_MAPPINGS.put("LINE_NUMBER", "lineNumber");
+        COLUMN_MAPPINGS.put("LINE_ID", "lineId");  // Added mapping for line_id
         COLUMN_MAPPINGS.put("ERECTION_MKD", "erectionMkd");
         COLUMN_MAPPINGS.put("ITEM_NO", "itemNo");
         COLUMN_MAPPINGS.put("SECTION", "section");
@@ -55,7 +58,9 @@ public class ExcelImportServiceImpl implements ExcelImportService {
         COLUMN_MAPPINGS.put("DESCRIPTION", "drawingDescription");
         COLUMN_MAPPINGS.put("ORDER NO", "orderNumber");
         COLUMN_MAPPINGS.put("ORIGINAL LINE NUMBER", "origLineNumber");
+        COLUMN_MAPPINGS.put("ORIGINAL LINE ID", "origLineId");  // Added mapping for orig_line_id
         COLUMN_MAPPINGS.put("ORIG LINE NO", "origLineNumber");
+        COLUMN_MAPPINGS.put("ORIG LINE ID", "origLineId");  // Added mapping for orig_line_id
         COLUMN_MAPPINGS.put("LINE NO", "lineNumber");
         COLUMN_MAPPINGS.put("ERECTION MARK", "erectionMkd");
         COLUMN_MAPPINGS.put("ERECTION MKD.", "erectionMkd");
@@ -104,6 +109,14 @@ public class ExcelImportServiceImpl implements ExcelImportService {
             Map<Integer, String> columnIndexToFieldMap = mapHeadersToFields(headerRow);
             log.info("Mapped {} columns in sheet {}", columnIndexToFieldMap.size(), sheet.getSheetName());
             
+            // Get the next line_id to use (max existing line_id + 1)
+            AtomicLong nextLineId = new AtomicLong(getNextLineId());
+            
+            // Get the next orig_line_id to use (max existing orig_line_id + 1)
+            AtomicLong nextOrigLineId = new AtomicLong(getNextOrigLineId());
+            
+            log.info("Starting with nextLineId: {}, nextOrigLineId: {}", nextLineId.get(), nextOrigLineId.get());
+            
             // Process data rows
             for (int rowNum = 1; rowNum <= sheet.getLastRowNum(); rowNum++) {
                 Row row = sheet.getRow(rowNum);
@@ -121,6 +134,21 @@ public class ExcelImportServiceImpl implements ExcelImportService {
                 boolean hasData = processRowData(row, columnIndexToFieldMap, entity);
                 
                 if (hasData) {
+                    // Auto-assign line_id if not present in the import
+                    if (entity.getLineId() == null) {
+                        entity.setLineId(nextLineId.getAndIncrement());
+                        log.debug("Auto-assigned lineId: {}", entity.getLineId());
+                    }
+                    
+                    // Auto-assign orig_line_id if not present in the import
+                    if (entity.getOrigLineId() == null) {
+                        entity.setOrigLineId(nextOrigLineId.getAndIncrement());
+                        log.debug("Auto-assigned origLineId: {}", entity.getOrigLineId());
+                    }
+                    
+                    // NOTE: We do NOT auto-assign lineNumber as it comes from the file
+                    // The lineNumber is now stored as BigDecimal to preserve decimal points
+                    
                     // Set batch_name as a combination of building_name and drawing_no
                     setBatchName(entity);
                     
@@ -158,6 +186,30 @@ public class ExcelImportServiceImpl implements ExcelImportService {
             log.error("Error importing Excel file: {}", e.getMessage(), e);
             throw e;
         }
+    }
+
+    // Helper method to get the next line_id
+    private long getNextLineId() {
+        // Find the maximum line_id in the database and add 1
+        Long maxLineId = repository.findAll().stream()
+                .filter(record -> record.getLineId() != null)
+                .map(OrderFabricationImport::getLineId)
+                .max(Long::compareTo)
+                .orElse(0L);
+        
+        return maxLineId + 1;
+    }
+    
+    // Helper method to get the next orig_line_id
+    private long getNextOrigLineId() {
+        // Find the maximum orig_line_id in the database and add 1
+        Long maxOrigLineId = repository.findAll().stream()
+                .filter(record -> record.getOrigLineId() != null)
+                .map(OrderFabricationImport::getOrigLineId)
+                .max(Long::compareTo)
+                .orElse(0L);
+        
+        return maxOrigLineId + 1;
     }
 
     // Helper method to validate entity but don't reject if invalid
@@ -199,7 +251,7 @@ public class ExcelImportServiceImpl implements ExcelImportService {
         log.debug("Set batch_name to: {}", batchName);
     }
 
-    // UPDATED: This method now handles different cell types for headers
+    // This method handles different cell types for headers
     private Map<Integer, String> mapHeadersToFields(Row headerRow) {
         Map<Integer, String> columnIndexToFieldMap = new HashMap<>();
         
@@ -364,15 +416,48 @@ public class ExcelImportServiceImpl implements ExcelImportService {
                         }
                     }
                     break;
-                case "lineNumber":
+                case "origLineId":  // Added case for origLineId
                     if (longValue != null) {
-                        entity.setLineNumber(longValue);
+                        entity.setOrigLineId(longValue);
                         return true;
                     } else if (stringValue != null) {
                         try {
-                            entity.setLineNumber(Long.parseLong(stringValue));
+                            entity.setOrigLineId(Long.parseLong(stringValue));
                             return true;
                         } catch (NumberFormatException e) {
+                            entity.setOrigLineId(null);
+                            return false;
+                        }
+                    }
+                    break;
+                case "lineId":  // Added case for lineId
+                    if (longValue != null) {
+                        entity.setLineId(longValue);
+                        return true;
+                    } else if (stringValue != null) {
+                        try {
+                            entity.setLineId(Long.parseLong(stringValue));
+                            return true;
+                        } catch (NumberFormatException e) {
+                            entity.setLineId(null);
+                            return false;
+                        }
+                    }
+                    break;
+                case "lineNumber":
+                    // FIXED: Store lineNumber as BigDecimal to preserve decimal points
+                    if (numericValue != null) {
+                        entity.setLineNumber(numericValue);
+                        log.debug("Set lineNumber to BigDecimal value: {}", numericValue);
+                        return true;
+                    } else if (stringValue != null) {
+                        try {
+                            BigDecimal lineNumberDecimal = new BigDecimal(stringValue);
+                            entity.setLineNumber(lineNumberDecimal);
+                            log.debug("Set lineNumber to BigDecimal from string: {}", lineNumberDecimal);
+                            return true;
+                        } catch (NumberFormatException e) {
+                            log.warn("Could not parse lineNumber as BigDecimal: {}", stringValue);
                             entity.setLineNumber(null);
                             return false;
                         }

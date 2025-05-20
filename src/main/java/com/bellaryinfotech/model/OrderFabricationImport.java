@@ -49,7 +49,7 @@ public class OrderFabricationImport {
     private Long origLineId;
 
     @Column(name = "line_number")
-    private Long lineNumber;
+    private BigDecimal lineNumber;
 
     @Column(name = "line_id")
     private Long lineId;
@@ -197,12 +197,11 @@ public class OrderFabricationImport {
     public void setOrigLineId(Long origLineId) {
         this.origLineId = origLineId;
     }
-
-    public Long getLineNumber() {
+    public BigDecimal getLineNumber() {
         return lineNumber;
     }
 
-    public void setLineNumber(Long lineNumber) {
+    public void setLineNumber(BigDecimal lineNumber) {
         this.lineNumber = lineNumber;
     }
 

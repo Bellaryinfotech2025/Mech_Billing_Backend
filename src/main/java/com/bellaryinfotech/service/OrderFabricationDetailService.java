@@ -1,7 +1,5 @@
 package com.bellaryinfotech.service;
  
- 
-
 import com.bellaryinfotech.DTO.OrderFabricationDetailDTO;
 
 import java.util.List;
@@ -25,4 +23,10 @@ public interface OrderFabricationDetailService {
     List<OrderFabricationDetailDTO> findByDrawingNo(String drawingNo);
     
     List<OrderFabricationDetailDTO> findByOrderNumber(String orderNumber);
+    
+    List<OrderFabricationDetailDTO> findByErectionMkd(String erectionMkd);
+    
+    List<OrderFabricationDetailDTO> findByLineIdAndErectionMkd(Long lineId, String erectionMkd);
+    
+    List<OrderFabricationDetailDTO> findByLineNumberAndErectionMkd(String lineNumber, String erectionMkd);
 }

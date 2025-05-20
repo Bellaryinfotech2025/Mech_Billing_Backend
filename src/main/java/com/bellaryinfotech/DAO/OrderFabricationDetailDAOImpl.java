@@ -1,8 +1,5 @@
 package com.bellaryinfotech.DAO;
  
- 
-
-import com.bellaryinfotech.DAO.OrderFabricationDetailDAO;
 import com.bellaryinfotech.model.OrderFabricationDetail;
 import com.bellaryinfotech.repo.OrderFabricationDetailRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,5 +56,15 @@ public class OrderFabricationDetailDAOImpl implements OrderFabricationDetailDAO 
     @Override
     public List<OrderFabricationDetail> findByOrderNumber(String orderNumber) {
         return orderFabricationDetailRepository.findByOrderNumber(orderNumber);
+    }
+    
+    @Override
+    public List<OrderFabricationDetail> findByErectionMkd(String erectionMkd) {
+        return orderFabricationDetailRepository.findByErectionMkdContainingIgnoreCase(erectionMkd);
+    }
+    
+    @Override
+    public List<OrderFabricationDetail> findByLineIdAndErectionMkd(Long lineId, String erectionMkd) {
+        return orderFabricationDetailRepository.findByLineIdAndErectionMkdContainingIgnoreCase(lineId, erectionMkd);
     }
 }

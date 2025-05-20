@@ -17,6 +17,7 @@ import com.bellaryinfotech.model.OrderFabricationImport;
 import com.bellaryinfotech.repo.OrderFabricationImportRepository;
 import com.bellaryinfotech.service.ExcelImportService;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -254,6 +255,7 @@ public class FabricationImportController {
                     ));
         }
     }
+    
     //fabrication get api
     @GetMapping("/fabrication-columns")
     public ResponseEntity<?> getFabricationColumns() {
@@ -406,7 +408,6 @@ public class FabricationImportController {
         }
     }
     
-    // ADD THIS NEW ENDPOINT - This was missing in your controller
     @GetMapping("/fabrication-by-line")
     public ResponseEntity<?> getFabricationByLine(@RequestParam(required = false) String lineNumber) {
         try {
@@ -415,19 +416,24 @@ public class FabricationImportController {
             List<OrderFabricationImport> records;
             
             if (lineNumber != null && !lineNumber.isEmpty()) {
-                // Try to parse the line number - it could be a decimal like "1.1"
+                // Try to parse the line number as BigDecimal to preserve decimal points
                 try {
                     // First try to find by exact string match
-                    records = repository.findByLineNumber(lineNumber);
+                    records = repository.findByLineNumberAsString(lineNumber);
                     
-                    // If no records found, try to parse as Long if possible
-                    if (records.isEmpty() && !lineNumber.contains(".")) {
-                        Long lineNumberLong = Long.parseLong(lineNumber);
-                        records = repository.findByLineNumber(lineNumberLong);
+                    // If no records found, try to parse as BigDecimal
+                    if (records.isEmpty()) {
+                        BigDecimal lineNumberDecimal = new BigDecimal(lineNumber);
+                        records = repository.findByLineNumber(lineNumberDecimal);
+                        
+                        // If still no records, try approximate matching (for floating point precision issues)
+                        if (records.isEmpty()) {
+                            records = repository.findByApproximateLineNumberAndErectionMkd(lineNumberDecimal, "");
+                        }
                     }
                 } catch (NumberFormatException e) {
                     // If parsing fails, just use the string version
-                    records = repository.findByLineNumber(lineNumber);
+                    records = repository.findByLineNumberAsString(lineNumber);
                 }
             } else {
                 // If no line number provided, return latest records
@@ -451,7 +457,6 @@ public class FabricationImportController {
         }
     }
     
-    // ADD THIS NEW ENDPOINT FOR DELETING BY IFACE_ID
     @DeleteMapping("/fabrication/{ifaceId}")
     public ResponseEntity<?> deleteFabrication(@PathVariable Long ifaceId) {
         try {
@@ -494,6 +499,154 @@ public class FabricationImportController {
                         "status", "error",
                         "message", "Failed to delete fabrication record: " + e.getMessage(),
                         "details", e.toString()
+                    ));
+        }
+    }
+    
+    // NEW ENDPOINTS FOR ERECTION MKD FILTERING
+    
+    /**
+     * Get fabrication records by erection MKD
+     * 
+     * @param erectionMkd The erection MKD to filter by
+     * @return List of matching fabrication records
+     */
+    @GetMapping("/fabrication/erection/{erectionMkd}")
+    public ResponseEntity<?> getFabricationByErectionMkd(@PathVariable String erectionMkd) {
+        try {
+            log.info("Fetching fabrication data for erection MKD: {}", erectionMkd);
+            
+            if (erectionMkd == null || erectionMkd.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "status", "error",
+                    "message", "Erection MKD parameter is required"
+                ));
+            }
+            
+            List<OrderFabricationImport> records = repository.findByErectionMkdContainingIgnoreCase(erectionMkd);
+            log.info("Found {} records for erection MKD: {}", records.size(), erectionMkd);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("status", "success");
+            response.put("data", records);
+            response.put("count", records.size());
+            response.put("erectionMkd", erectionMkd);
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Failed to retrieve fabrication data by erection MKD", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of(
+                        "status", "error",
+                        "message", "Failed to retrieve fabrication data: " + e.getMessage()
+                    ));
+        }
+    }
+    
+    /**
+     * Get fabrication records by line number and erection MKD
+     * 
+     * @param lineNumber The line number to filter by
+     * @param erectionMkd The erection MKD to filter by
+     * @return List of matching fabrication records
+     */
+    @GetMapping("/fabrication/line/{lineNumber}/erection/{erectionMkd}")
+    public ResponseEntity<?> getFabricationByLineNumberAndErectionMkd(
+            @PathVariable String lineNumber,
+            @PathVariable String erectionMkd) {
+        try {
+            log.info("Fetching fabrication data for line number: {} and erection MKD: {}", lineNumber, erectionMkd);
+            
+            if (lineNumber == null || lineNumber.isEmpty() || erectionMkd == null || erectionMkd.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "status", "error",
+                    "message", "Both line number and erection MKD parameters are required"
+                ));
+            }
+            
+            List<OrderFabricationImport> records = new ArrayList<>();
+            
+            // Try to parse the line number as BigDecimal to preserve decimal points
+            try {
+                BigDecimal lineNumberDecimal = new BigDecimal(lineNumber);
+                records = repository.findByLineNumberAndErectionMkdContainingIgnoreCase(lineNumberDecimal, erectionMkd);
+                
+                // If no records found, try approximate matching (for floating point precision issues)
+                if (records.isEmpty()) {
+                    records = repository.findByApproximateLineNumberAndErectionMkd(lineNumberDecimal, erectionMkd);
+                }
+                
+                log.info("Found {} records for line number: {} and erection MKD: {}", 
+                        records.size(), lineNumberDecimal, erectionMkd);
+            } catch (NumberFormatException e) {
+                log.warn("Could not parse line number as BigDecimal: {}", lineNumber);
+                // If we can't parse as BigDecimal, try string matching
+                records = repository.findByLineNumberAsString(lineNumber);
+                // Filter by erection MKD in memory
+                records = records.stream()
+                        .filter(r -> r.getErectionMkd() != null && 
+                                r.getErectionMkd().toLowerCase().contains(erectionMkd.toLowerCase()))
+                        .toList();
+                log.info("Found {} records for string line number: {} and erection MKD: {}", 
+                        records.size(), lineNumber, erectionMkd);
+            }
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("status", "success");
+            response.put("data", records);
+            response.put("count", records.size());
+            response.put("lineNumber", lineNumber);
+            response.put("erectionMkd", erectionMkd);
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Failed to retrieve fabrication data by line number and erection MKD", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of(
+                        "status", "error",
+                        "message", "Failed to retrieve fabrication data: " + e.getMessage()
+                    ));
+        }
+    }
+    
+    /**
+     * Get fabrication records by line ID and erection MKD
+     * 
+     * @param lineId The line ID to filter by
+     * @param erectionMkd The erection MKD to filter by
+     * @return List of matching fabrication records
+     */
+    @GetMapping("/fabrication/line-id/{lineId}/erection/{erectionMkd}")
+    public ResponseEntity<?> getFabricationByLineIdAndErectionMkd(
+            @PathVariable Long lineId,
+            @PathVariable String erectionMkd) {
+        try {
+            log.info("Fetching fabrication data for line ID: {} and erection MKD: {}", lineId, erectionMkd);
+            
+            if (lineId == null || erectionMkd == null || erectionMkd.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "status", "error",
+                    "message", "Both line ID and erection MKD parameters are required"
+                ));
+            }
+            
+            List<OrderFabricationImport> records = repository.findByLineIdAndErectionMkdContainingIgnoreCase(lineId, erectionMkd);
+            log.info("Found {} records for line ID: {} and erection MKD: {}", records.size(), lineId, erectionMkd);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("status", "success");
+            response.put("data", records);
+            response.put("count", records.size());
+            response.put("lineId", lineId);
+            response.put("erectionMkd", erectionMkd);
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Failed to retrieve fabrication data by line ID and erection MKD", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of(
+                        "status", "error",
+                        "message", "Failed to retrieve fabrication data: " + e.getMessage()
                     ));
         }
     }

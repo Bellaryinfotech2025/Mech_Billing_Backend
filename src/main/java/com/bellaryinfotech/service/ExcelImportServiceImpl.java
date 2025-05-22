@@ -130,6 +130,9 @@ public class ExcelImportServiceImpl implements ExcelImportService {
                 entity.setCreationDate(new Date());
                 entity.setLastUpdateDate(new Date());
                 
+                // Set the status to "Fabrication" for all imported records
+                entity.setStatus("Fabrication");
+                
                 // Process row data
                 boolean hasData = processRowData(row, columnIndexToFieldMap, entity);
                 

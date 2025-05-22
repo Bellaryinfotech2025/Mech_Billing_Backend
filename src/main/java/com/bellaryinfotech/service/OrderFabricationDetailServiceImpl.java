@@ -57,6 +57,9 @@ public class OrderFabricationDetailServiceImpl implements OrderFabricationDetail
         orderFabricationDetail.setCreatedDate(now);
         orderFabricationDetail.setCreationDate(LocalDate.now());
         
+        // Set status to "Fabrication"
+        orderFabricationDetail.setStatus("Fabrication");
+        
         OrderFabricationDetail savedEntity = orderFabricationDetailDAO.save(orderFabricationDetail);
         return convertToDTO(savedEntity);
     }
@@ -73,6 +76,9 @@ public class OrderFabricationDetailServiceImpl implements OrderFabricationDetail
         // Set update dates
         existingEntity.setUpdatedDate(LocalDateTime.now());
         existingEntity.setLastUpdateDate(LocalDate.now());
+        
+        // Ensure status is set to "Fabrication" even during updates
+        existingEntity.setStatus("Fabrication");
         
         OrderFabricationDetail updatedEntity = orderFabricationDetailDAO.save(existingEntity);
         return convertToDTO(updatedEntity);
@@ -191,6 +197,9 @@ public class OrderFabricationDetailServiceImpl implements OrderFabricationDetail
         dto.setUpdatedDate(entity.getUpdatedDate());
         dto.setVersion(entity.getVersion());
         
+        // Set status field
+        dto.setStatus(entity.getStatus());
+        
         // Set UOM codes and meanings
         dto.setLengthUom(entity.getLengthUom());
         dto.setLengthUomMeaning(lookupDAO.getMeaningByTypeAndCode(UOM_LOOKUP_TYPE, entity.getLengthUom()));
@@ -239,6 +248,11 @@ public class OrderFabricationDetailServiceImpl implements OrderFabricationDetail
         entity.setUpdatedDate(dto.getUpdatedDate());
         entity.setVersion(dto.getVersion());
         
+        // Set status from DTO if provided, otherwise it will be set in save/update methods
+        if (dto.getStatus() != null) {
+            entity.setStatus(dto.getStatus());
+        }
+        
         // Convert UOM meanings to codes if provided, otherwise use the codes directly
         // Also ensure all UOM codes are stored in uppercase
         if (dto.getLengthUomMeaning() != null && !dto.getLengthUomMeaning().isEmpty()) {
@@ -286,6 +300,8 @@ public class OrderFabricationDetailServiceImpl implements OrderFabricationDetail
         entity.setLastUpdatedBy(dto.getLastUpdatedBy());
         entity.setOrgId(dto.getOrgId());
         entity.setUpdatedBy(dto.getUpdatedBy());
+        
+        // Status will be set to "Fabrication" in the update method
         
         // Convert UOM meanings to codes if provided, ensure all UOM codes are stored in uppercase
         if (dto.getLengthUomMeaning() != null && !dto.getLengthUomMeaning().isEmpty()) {

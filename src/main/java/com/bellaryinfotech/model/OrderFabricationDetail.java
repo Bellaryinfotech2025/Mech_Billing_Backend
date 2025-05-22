@@ -110,6 +110,10 @@ public class OrderFabricationDetail {
     @Version
     @Column(name = "version")
     private Long version = 0L;
+    
+ // New status column
+    @Column(name = "status")
+    private String status;
 
     // Default constructor
     public OrderFabricationDetail() {
@@ -379,6 +383,15 @@ public class OrderFabricationDetail {
     public void setVersion(Long version) {
         this.version = version;
     }
+
+	public String getStatus() {
+		return status;
+	}
+
+	public void setStatus(String status) {
+		this.status = status;
+	}
+    
 }
 
 

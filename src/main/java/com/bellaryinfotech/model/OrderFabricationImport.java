@@ -115,6 +115,10 @@ public class OrderFabricationImport {
 
     @Column(name = "batch_name")
     private String batchName;
+    
+    // New status column
+    @Column(name = "status")
+    private String status;
 
     // Getters and Setters
 
@@ -371,5 +375,14 @@ public class OrderFabricationImport {
 
     public void setBatchName(String batchName) {
         this.batchName = batchName;
+    }
+    
+    // Getter and setter for the new status field
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

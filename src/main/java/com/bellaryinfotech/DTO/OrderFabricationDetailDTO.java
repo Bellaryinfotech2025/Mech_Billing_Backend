@@ -5,7 +5,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public class OrderFabricationDetailDTO {
-    
     private Long id;
     private String buildingName;
     private String drawingNo;
@@ -42,10 +41,7 @@ public class OrderFabricationDetailDTO {
     private String updatedBy;
     private LocalDateTime updatedDate;
     private Long version;
-
-    // Default constructor
-    public OrderFabricationDetailDTO() {
-    }
+    private String status; // New status field
 
     // Getters and Setters
     public Long getId() {
@@ -334,5 +330,13 @@ public class OrderFabricationDetailDTO {
 
     public void setVersion(Long version) {
         this.version = version;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

@@ -650,4 +650,19 @@ public class FabricationImportController {
                     ));
         }
     }
+    
+    @PostMapping("/copyimporterectionmkd")
+    public String copyMark(
+            @RequestParam String sourceMarkNo,
+            @RequestParam String newMarkNo) {
+
+        int copiedCount = excelImportService.copyMarkNumber(sourceMarkNo, newMarkNo);
+
+        if (copiedCount == 0) {
+            return "No records found for mark number: " + sourceMarkNo;
+        }
+
+        return "Successfully copied " + copiedCount + " records from " + sourceMarkNo + " to " + newMarkNo;
+    } 
+    
 }

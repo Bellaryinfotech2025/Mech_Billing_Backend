@@ -65,6 +65,8 @@ public interface OrderFabricationImportRepository extends JpaRepository<OrderFab
     // Find by line ID and erection MKD
     List<OrderFabricationImport> findByLineIdAndErectionMkdContainingIgnoreCase(Long lineId, String erectionMkd);
     
+    List<OrderFabricationImport> findByErectionMkd(String erectionMkd);
+    
     // Find by approximate line number (for handling precision issues) - NEW
     @Query("SELECT o FROM OrderFabricationImport o WHERE " +
            "ABS(o.lineNumber - :lineNumber) < 0.001 AND " +

@@ -1,6 +1,7 @@
 package com.bellaryinfotech.model;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Date;
 
 import jakarta.persistence.Column;
@@ -385,4 +386,14 @@ public class OrderFabricationImport {
     public void setStatus(String status) {
         this.status = status;
     }
+
+	public void setCreationDate(LocalDate now) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void setLastUpdateDate(LocalDate now) {
+		// TODO Auto-generated method stub
+		
+	}
 }

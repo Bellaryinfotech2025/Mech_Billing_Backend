@@ -2,6 +2,9 @@ package com.bellaryinfotech.controller;
 
 import com.bellaryinfotech.DTO.OrderFabricationDetailDTO;
 import com.bellaryinfotech.service.OrderFabricationDetailService;
+import com.bellaryinfotech.service.OrderFabricationDetailServiceImpl;
+ 
+
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -23,6 +26,9 @@ public class OrderFabricationDetailController {
             OrderFabricationDetailService orderFabricationDetailService) {
         this.orderFabricationDetailService = orderFabricationDetailService;
     }
+    
+    @Autowired
+	public OrderFabricationDetailServiceImpl service;
     
     @GetMapping("/loadingfabricatiodetail")
     public ResponseEntity<List<OrderFabricationDetailDTO>> getAllOrderFabricationDetails() {
@@ -144,4 +150,25 @@ public class OrderFabricationDetailController {
             return ResponseEntity.badRequest().body(response);
         }
     }
+    
+    
+    @PostMapping("/copyerectionmkd")
+	public String copyMark(
+			@RequestParam String sourceMarkNo,
+			@RequestParam String newMarkNo) {
+		int copiedCount = service.copyMarkNumber(sourceMarkNo, newMarkNo);
+		
+		if (copiedCount == 0) {
+			return "No records found for mark number:" + sourceMarkNo;
+		}
+		
+		return "Successfully copied" + copiedCount + " records from " + sourceMarkNo + " to " + newMarkNo;
+	}
+    
+    
+    
+    
+    
+    
+    
 }

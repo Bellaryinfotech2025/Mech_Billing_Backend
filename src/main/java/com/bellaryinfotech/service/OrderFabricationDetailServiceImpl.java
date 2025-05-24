@@ -9,6 +9,9 @@ import com.bellaryinfotech.DAO.LookupDAO;
 import com.bellaryinfotech.DAO.OrderFabricationDetailDAO;
 import com.bellaryinfotech.DTO.OrderFabricationDetailDTO;
 import com.bellaryinfotech.model.OrderFabricationDetail;
+ 
+import com.bellaryinfotech.repo.OrderFabricationDetailRepository;
+ 
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -24,6 +27,9 @@ public class OrderFabricationDetailServiceImpl implements OrderFabricationDetail
     
     private final OrderFabricationDetailDAO orderFabricationDetailDAO;
     private final LookupDAO lookupDAO;
+    
+    @Autowired
+	private OrderFabricationDetailRepository repository;
     
     @Autowired
     public OrderFabricationDetailServiceImpl(OrderFabricationDetailDAO orderFabricationDetailDAO, LookupDAO lookupDAO) {
@@ -322,4 +328,60 @@ public class OrderFabricationDetailServiceImpl implements OrderFabricationDetail
             entity.setTotalQuantityUom(dto.getTotalQuantityUom().toUpperCase());
         }
     }
+    
+    
+    
+    
+    public int copyMarkNumber(String sourceMarkNo, String newMarkNo) {
+		 List<OrderFabricationDetail> sourceRecords = repository.findByErectionMkd(sourceMarkNo);
+
+	        if (sourceRecords.isEmpty()) {
+	            return 0;
+	        }
+
+	        for (OrderFabricationDetail source : sourceRecords) {
+	        	OrderFabricationDetail copy = new OrderFabricationDetail();
+
+	            
+	            copy.setBuildingName(source.getBuildingName());
+	            copy.setDrawingNo(source.getDrawingNo());
+	            copy.setDrawingDescription(source.getDrawingDescription());
+	            copy.setOrderNumber(source.getOrderNumber());
+	            copy.setOrderId(source.getOrderId());
+	            copy.setOrigLineNumber(source.getOrigLineNumber());
+	            copy.setOrigLineId(source.getOrigLineId());
+	            copy.setLineNumber(source.getLineNumber());
+	            copy.setLineId(source.getLineId());
+	            copy.setItemNo(source.getItemNo());
+	            copy.setSection(source.getSection());
+	            copy.setLength(source.getLength());
+	            copy.setLengthUom(source.getLengthUom());
+	            copy.setQuantity(source.getQuantity());
+	            copy.setUnitPrice(source.getUnitPrice());
+	            copy.setUnitPriceUom(source.getUnitPriceUom());
+	            copy.setTotalQuantity(source.getTotalQuantity());
+	            copy.setTotalQuantityUom(source.getTotalQuantityUom());
+	            copy.setOriginalQuantity(source.getOriginalQuantity());
+	            copy.setRepeatedQty(source.getRepeatedQty());
+	            copy.setRemark(source.getRemark());
+	            copy.setTenantId(source.getTenantId());
+
+	            
+	            copy.setErectionMkd(newMarkNo);
+
+	            
+	            copy.setCreationDate(LocalDate.now());
+	            copy.setCreatedBy(source.getCreatedBy());
+	            copy.setLastUpdateDate(LocalDate.now());
+	            copy.setLastUpdatedBy(source.getLastUpdatedBy());
+	            copy.setOrgId(source.getOrgId());
+
+	            
+	            copy.setStatus("Fabrication");
+
+	            repository.save(copy);
+	        }
+
+	        return sourceRecords.size();
+	    }
 }

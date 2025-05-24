@@ -1,6 +1,8 @@
 package com.bellaryinfotech.repo;
  
 import com.bellaryinfotech.model.OrderFabricationDetail;
+ 
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -22,4 +24,6 @@ public interface OrderFabricationDetailRepository extends JpaRepository<OrderFab
     List<OrderFabricationDetail> findByErectionMkdContainingIgnoreCase(String erectionMkd);
     
     List<OrderFabricationDetail> findByLineIdAndErectionMkdContainingIgnoreCase(Long lineId, String erectionMkd);
+    
+    List<OrderFabricationDetail> findByErectionMkd(String erectionMkd);
 }

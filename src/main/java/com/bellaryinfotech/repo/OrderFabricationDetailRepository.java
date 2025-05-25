@@ -4,7 +4,11 @@ import com.bellaryinfotech.model.OrderFabricationDetail;
  
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -26,4 +30,13 @@ public interface OrderFabricationDetailRepository extends JpaRepository<OrderFab
     List<OrderFabricationDetail> findByLineIdAndErectionMkdContainingIgnoreCase(Long lineId, String erectionMkd);
     
     List<OrderFabricationDetail> findByErectionMkd(String erectionMkd);
-}
+    
+    @Transactional
+    @Modifying
+    @Query("UPDATE OrderFabricationDetail d SET d.status = :status WHERE d.erectionMkd = :erectionMkd")
+    int updateStatusByErectionMkd(@Param("erectionMkd") String erectionMkd, @Param("status") String status);
+
+        
+
+    }
+

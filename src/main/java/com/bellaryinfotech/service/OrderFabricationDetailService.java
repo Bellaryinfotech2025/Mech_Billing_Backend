@@ -29,4 +29,16 @@ public interface OrderFabricationDetailService {
     List<OrderFabricationDetailDTO> findByLineIdAndErectionMkd(Long lineId, String erectionMkd);
     
     List<OrderFabricationDetailDTO> findByLineNumberAndErectionMkd(String lineNumber, String erectionMkd);
+
+    void updateStatusByErectionMkd(String erectionMkd, String status);
+    
+    
+    
+
+    
+	 
+
+	
+	 
+	
 }

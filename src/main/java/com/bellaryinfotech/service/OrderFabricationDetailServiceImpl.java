@@ -2,6 +2,7 @@ package com.bellaryinfotech.service;
  
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -384,4 +385,20 @@ public class OrderFabricationDetailServiceImpl implements OrderFabricationDetail
 
 	        return sourceRecords.size();
 	    }
+
+    @Override
+	@Transactional
+	public void updateStatusByErectionMkd(String erectionMkd, String status) {
+	    List<OrderFabricationDetail> details = repository.findByErectionMkd(erectionMkd);
+	    details.forEach(d -> d.setStatus(status));
+	    repository.saveAll(details);
+	}
+
+	public String storeErectionMkds(List<String> erectionMkds) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	 
+
 }

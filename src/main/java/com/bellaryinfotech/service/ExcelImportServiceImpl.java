@@ -12,7 +12,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -649,58 +648,5 @@ public class ExcelImportServiceImpl implements ExcelImportService {
             log.error("Error getting cell value as BigDecimal: {}", e.getMessage(), e);
             return null;
         }
-    }
-    
-    public int copyMarkNumber(String sourceMarkNo, String newMarkNo) {
-        List<OrderFabricationImport> sourceRecords = repository.findByErectionMkd(sourceMarkNo);
-
-        if (sourceRecords.isEmpty()) {
-            return 0;
-        }
-
-        for (OrderFabricationImport source : sourceRecords) {
-            OrderFabricationImport copy = new OrderFabricationImport();
-
-            // Copy all fields except id and erectionMkd
-            copy.setBuildingName(source.getBuildingName());
-            copy.setDrawingNo(source.getDrawingNo());
-            copy.setDrawingDescription(source.getDrawingDescription());
-            copy.setOrderNumber(source.getOrderNumber());
-            copy.setOrderId(source.getOrderId());
-            copy.setOrigLineNumber(source.getOrigLineNumber());
-            copy.setOrigLineId(source.getOrigLineId());
-            copy.setLineNumber(source.getLineNumber());
-            copy.setLineId(source.getLineId());
-            copy.setItemNo(source.getItemNo());
-            copy.setSection(source.getSection());
-            copy.setLength(source.getLength());
-            copy.setLengthUom(source.getLengthUom());
-            copy.setQuantity(source.getQuantity());
-            copy.setUnitPrice(source.getUnitPrice());
-            copy.setUnitPriceUom(source.getUnitPriceUom());
-            copy.setTotalQuantity(source.getTotalQuantity());
-            copy.setTotalQuantityUom(source.getTotalQuantityUom());
-            copy.setOriginalQuantity(source.getOriginalQuantity());
-            copy.setRepeatedQty(source.getRepeatedQty());
-            copy.setRemark(source.getRemark());
-            copy.setTenantId(source.getTenantId());
-
-            // Set new mark number
-            copy.setErectionMkd(newMarkNo);
-
-            // Update dates and user info as appropriate
-            copy.setCreationDate(LocalDate.now());
-            copy.setCreatedBy(source.getCreatedBy());
-            copy.setLastUpdateDate(LocalDate.now());
-            copy.setLastUpdatedBy(source.getLastUpdatedBy());
-            copy.setOrgId(source.getOrgId());
-
-            // Set status to Fabrication
-            copy.setStatus("Fabrication");
-
-            repository.save(copy);
-        }
-
-        return sourceRecords.size();
     }
 }

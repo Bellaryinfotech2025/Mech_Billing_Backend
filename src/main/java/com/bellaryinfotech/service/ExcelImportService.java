@@ -15,7 +15,4 @@ public interface ExcelImportService {
      * @throws Exception If an error occurs during import
      */
     List<OrderFabricationImport> importExcelToDatabase(MultipartFile file) throws Exception;
-    int copyMarkNumber(String sourceMarkNo, String newMarkNo);
-
-     
 }

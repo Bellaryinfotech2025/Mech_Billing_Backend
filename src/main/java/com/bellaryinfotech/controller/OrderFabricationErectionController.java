@@ -20,7 +20,7 @@ public class OrderFabricationErectionController {
     public static final String PUT_IMPORT_UPDATE_STATUS = "/import/update-status/{erectionMkd}";
     public static final String PUT_UPDATE_STATUS = "/update-status/{erectionMkd}";
 
-    // Consolidated GET endpoint
+     
     @GetMapping(value = GET_MKDS, produces = "application/json")
     public ResponseEntity<List<String>> getErectionMkds(
             @RequestParam(required = false, defaultValue = "details") String source) {
@@ -36,8 +36,14 @@ public class OrderFabricationErectionController {
         }
         return ResponseEntity.ok(mkds);
     }
+    @GetMapping(value = "/stored-records", produces = "application/json")
+    public ResponseEntity<List<OrderFabricationErection>> getStoredErectionRecords() {
+        List<OrderFabricationErection> records = erectionService.getStoredErectionRecords();
+        return ResponseEntity.ok(records);
+    }
 
-    // Consolidated POST endpoint
+
+     
     @PostMapping(value = POST_MKDS, produces = "application/json")
     public ResponseEntity<String> storeErectionMkds(
             @RequestBody ErectionMkdRequest request) {
@@ -63,7 +69,7 @@ public class OrderFabricationErectionController {
         return ResponseEntity.ok("Selected erection mkds from " + request.getSource() + " table stored, and statuses updated in all tables.");
     }
 
-    // Optional: Direct status update endpoints (keep if you need them)
+    // Direct status update endpoints (keep if you need them)
     @PutMapping(value = PUT_IMPORT_UPDATE_STATUS, produces = "application/json")
     public ResponseEntity<String> updateImportStatus(
             @PathVariable String erectionMkd,
@@ -91,4 +97,7 @@ public class OrderFabricationErectionController {
         public List<String> getErectionMkds() { return erectionMkds; }
         public void setErectionMkds(List<String> erectionMkds) { this.erectionMkds = erectionMkds; }
     }
+    
+    
+    
 }

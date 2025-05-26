@@ -11,5 +11,7 @@ public interface OrderFabricationErectionService {
     List<OrderFabricationErection> storeErectionMkdsFromDetails(List<String> erectionMkds);
     void updateStatusByErectionMkd(String erectionMkd, String status);
     void updateImportStatusByErectionMkd(String erectionMkd, String status);
+    List<OrderFabricationErection> getStoredErectionRecords();
+
     
 }

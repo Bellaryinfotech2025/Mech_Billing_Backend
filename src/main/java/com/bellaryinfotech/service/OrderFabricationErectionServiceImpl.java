@@ -159,4 +159,10 @@ public class OrderFabricationErectionServiceImpl implements OrderFabricationErec
         list.forEach(imp -> imp.setStatus(status));
          importRepository.saveAll(list);
     }
+
+    @Override
+    public List<OrderFabricationErection> getStoredErectionRecords() {
+        return erectionRepository.findAll();  
+    }
+
 }
